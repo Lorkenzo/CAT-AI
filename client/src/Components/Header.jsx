@@ -31,9 +31,9 @@ function Header({stepnumber}){
     };
 
     return(
-        <div className="w-full h-[27%] justify-items-center">
-            <div className="w-[40%] h-full pt-2">
-                <Breadcrumbs aria-label="breadcrumb" separator={<NavigateNextIcon fontSize="small" />}>
+        <div className="w-full h-fit justify-items-center">
+            <div className='w-2/3 mt-3'>
+            <Breadcrumbs aria-label="breadcrumb" separator={<NavigateNextIcon fontSize="small" />}>
                     <Link underline="hover" color="inherit" href="/" variant='body2'>
                         <HomeIcon sx={{ mr: 0.5 }} fontSize="inherit"/>
                         Home
@@ -48,18 +48,21 @@ function Header({stepnumber}){
                         {stepsmap[stepnumber]} 
                     </Typography>
                 </Breadcrumbs>
+            </div>
+            <div className="w-[50%] h-fit">
 
                 <Typography variant='h5' className='pt-2'>
                     {stepsmap[stepnumber]} Exercise
                 </Typography>
 
-                <Typography variant='subtitle2' className='pt-2'>
+                <Typography variant='subtitle2' className='pt-2 max-md:hidden'>
                     {stepscaptionmap[stepnumber]} 
                 </Typography>
 
                 <Divider className='pt-2'/>
                 
-                <div className='w-full pt-3'>
+            </div>
+            <div className='w-2/3 mt-2 mb-3'>
                     <Stepper activeStep={stepnumber}>
                         {steps.map((label) => (
                         <Step key={label}>
@@ -68,7 +71,6 @@ function Header({stepnumber}){
                         ))}
                     </Stepper>
                 </div>
-            </div>
             
         </div>
     )

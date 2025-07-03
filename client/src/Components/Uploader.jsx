@@ -11,6 +11,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile'
 import API from '../API/API.mjs';
+import { useFormData } from "../contexts/FormContext"
 
 const formatFileSize = (bytes) => {
   if (bytes === 0) return '0 Bytes';
@@ -23,20 +24,24 @@ const formatFileSize = (bytes) => {
 function FileUploader({file,setFile}) {
   const [isDragOver, setIsDragOver] = useState(false);
   
-  const [previewUrl, setPreviewUrl] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState(false)
   const fileInputRef = useRef(null);
 
+  const { formData, setFormData } = useFormData();
+
   const handleFileUpload = async (selectedFile) => {
     if (!selectedFile) return;
-    const formData = new FormData();
-    formData.append('file', selectedFile);
+    const data = new FormData();
+    data.append('file', selectedFile);
 
     try {
       setUploading(true);
-      const data = await API.handleUploadFile(formData); // chiamata fetch
-      setPreviewUrl(data.url); // salva URL per preview
+      const file = await API.handleUploadFile(data); // chiamata fetch
+      setFormData(prev => ({
+            ...prev,
+            fileURL: file.url
+        }));
       setFile(selectedFile);
       setUploadError(false)
     } catch (err) {
@@ -61,10 +66,13 @@ function FileUploader({file,setFile}) {
 
   const handleDelete = async () => {
     try{
-      const relativePath = new URL(previewUrl).pathname.replace(/^\/+/, '');
+      const relativePath = new URL(formData.fileURL).pathname.replace(/^\/+/, '');
       await API.handleDeleteFile(relativePath)
       setFile(null)
-      setPreviewUrl(null);
+      setFormData(prev => ({
+            ...prev,
+            fileURL: null
+        }));
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
     catch(err){
@@ -86,7 +94,7 @@ function FileUploader({file,setFile}) {
   useEffect(()=>{
     const handleExtraction = async () => {
       try{
-        const relativePath = new URL(previewUrl).pathname.replace(/^\/+/, '');
+        const relativePath = new URL(formData.fileURL).pathname.replace(/^\/+/, '');
         const text = await API.handleTextExtraction(relativePath);
         console.log(text)
       }
@@ -94,9 +102,9 @@ function FileUploader({file,setFile}) {
         console.log(err)
       }
     }
-    if (file && previewUrl) handleExtraction(previewUrl)
+    if (file && formData.fileURL) handleExtraction(formData.fileURL)
     
-  },[file,previewUrl])
+  },[file,formData.fileURL])
 
   return (
     <>
@@ -108,7 +116,7 @@ function FileUploader({file,setFile}) {
             file.type === 'application/pdf' ? (
             <InsertDriveFileIcon />  // Mostra icona PDF
             ) : (
-            <img src={previewUrl} alt="preview" width={40} height={40} style={{ objectFit: 'contain' }} />
+            <img src={formData.fileURL} alt="preview" width={40} height={40} style={{ objectFit: 'contain' }} />
             )
         }
         </Avatar>

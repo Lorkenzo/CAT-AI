@@ -3,6 +3,7 @@ import Typography from '@mui/material/Typography';
 import { IconButton, Toolbar } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import SettingsIcon from '@mui/icons-material/Settings';
+import LogoCatAI from "../assets/logo.png"
 
 function NavBar({setIsSettingOpened}){
     const navigate = useNavigate()
@@ -10,11 +11,11 @@ function NavBar({setIsSettingOpened}){
     return ( 
         <AppBar position="static">
             <Toolbar>
-            <img src="src\assets\logocatai.png" className="max-h-16">
+            <img onClick={()=>navigate("/")} src={LogoCatAI} className="max-h-10 invert brightness-0 mr-2 cursor-pointer">
             </img>
             <Typography onClick={()=>navigate("/")} className="cursor-pointer" variant="h6" component="div" sx={{
               mr: 2,
-              display: { xs: 'none', md: 'flex' },
+              display: "flex",
               fontFamily: 'monospace',
               fontWeight: 700,
               letterSpacing: '.3rem',

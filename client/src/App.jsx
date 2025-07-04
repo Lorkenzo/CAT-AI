@@ -13,43 +13,47 @@ import { Routes, Route, Outlet } from "react-router-dom";
 import { Container } from "@mui/material";
 import Box from '@mui/material/Box';
 import { FormProvider } from "./contexts/FormContext";
+import { DocumentProvider } from "./contexts/CustomizeContext";
 
 function App() {
     const [fullScreen, setFullScreen] = useState(false)
     const [isSettingOpened, setIsSettingOpened] = useState(false)
     return (
-      <FormProvider>
-        <Routes>
-        <Route element={
-          <>
-          {!fullScreen && <NavBar setIsSettingOpened={setIsSettingOpened}/>}
-          <Settings isSettingOpened={isSettingOpened} setIsSettingOpened={setIsSettingOpened}></Settings>
-          <Container>
-            <Box sx={{ height: fullScreen? "100vh":"calc(100vh - 64px)" }} >
-              <Outlet/>
-            </Box>
-          </Container>
-          </>
-        }>
-          <Route index element={
-            <Home></Home>
-          } />
+      <DocumentProvider>
+        <FormProvider>
+            <Routes>
+            <Route element={
+              <>
+              {!fullScreen && <NavBar setIsSettingOpened={setIsSettingOpened}/>}
+              <Settings isSettingOpened={isSettingOpened} setIsSettingOpened={setIsSettingOpened}></Settings>
+              <Container>
+                <Box sx={{ height: fullScreen? "100vh":"calc(100vh - 64px)" }} >
+                  <Outlet/>
+                </Box>
+              </Container>
+              </>
+            }>
+              <Route index element={
+                <Home></Home>
+              } />
 
-          <Route path="/generate/*" element={
-            <Generate></Generate>
-          } />
+              <Route path="/generate/*" element={
+                <Generate></Generate>
+              } />
 
-          <Route path="/customize" element={
-            <Customize fullScreen={fullScreen} setFullScreen={setFullScreen}></Customize>
-          } />
+              <Route path="/customize" element={
+                <Customize fullScreen={fullScreen} setFullScreen={setFullScreen}></Customize>
+              } />
 
-          <Route path="/export" element={
-            <Export></Export>
-          } />
-          
-        </Route>
-      </Routes>
-    </FormProvider>
+              <Route path="/export" element={
+                <Export></Export>
+              } />
+              
+            </Route>
+          </Routes>
+        
+      </FormProvider>
+    </DocumentProvider>
     );
 }
 

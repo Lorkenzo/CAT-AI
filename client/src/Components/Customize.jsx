@@ -1,6 +1,8 @@
 import { Header } from "./Header"
 import { Stack, Tooltip, Button, IconButton, TextField, TextareaAutosize, ToggleButtonGroup, ToggleButton } from "@mui/material"
 import { useRef, useState, useEffect } from "react";
+import { useDocument } from "../contexts/CustomizeContext";
+import { ColorPicker } from "./ColorPicker";
 import Draggable from 'react-draggable';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import ZoomOutIcon from '@mui/icons-material/ZoomOut';
@@ -25,9 +27,11 @@ const PAGE_WIDTH = 794;
 const PAGE_HEIGHT = 1123;
 
 function Customize({fullScreen, setFullScreen}) {
+    const {textBoxes,images,addTextBox,updateTextBox,deleteTextBox,addImage,updateImage,deleteImage} = useDocument()
+
     const wrapperRef = useRef(null);
-    const [elements, setElements] = useState([]);
     const [selectedId, setSelectedId] = useState(null);
+    const [textSelectedId, setTextSelectedId] = useState(null);
     const [scale, setScale] = useState(1);
     const [offsetX, setOffsetX] = useState(0);
     const ZOOM_STEP = 0.1;
@@ -37,28 +41,30 @@ function Customize({fullScreen, setFullScreen}) {
     const zoomIn = () => setScale(prev => Math.min(prev + ZOOM_STEP, MAX_ZOOM));
     const zoomOut = () => setScale(prev => Math.max(prev - ZOOM_STEP, MIN_ZOOM));
 
-    const addTextBox = () => {
-        const newElement = {
-            id: Date.now(), // oppure uuid()
-            content: '',
-            position: { x: 16, y: 16 }, // posizione iniziale
-        };
-
-        setElements(prev => [...prev, newElement]);
-    };
-
-    const updateContent = (id, value) => {
-        setElements(prev =>
-        prev.map(el => (el.id === id ? { ...el, content: value } : el))
-        );
-    };
-
     const deleteElem = () =>{
-        console.log("Deleting ID:", selectedId);
-        console.log(selectedId)
-        setElements(prev => prev.filter(e=> e.id !== selectedId))
+        deleteTextBox(selectedId)
         setSelectedId(null)
+        setTextSelectedId(null)
     }
+
+    useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.key === "Delete" || e.key === "Backspace") && selectedId && !textSelectedId) {
+        // Verifica se l'id selezionato è una textbox o un'immagine
+        const isText = textBoxes.some(el => el.id === selectedId);
+        const isImage = images.some(img => img.id === selectedId);
+
+        if (isText) deleteTextBox(selectedId);
+        else if (isImage) deleteImage(selectedId);
+
+        setSelectedId(null);
+        setTextSelectedId(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedId, deleteTextBox, deleteImage, textBoxes, images]);
 
     useEffect(() => {
         function handleResize() {
@@ -90,6 +96,7 @@ function Customize({fullScreen, setFullScreen}) {
         setOffsetX(Math.max(offset, 0));
     },[scale])
 
+
     return (
         <div className="flex flex-col w-full h-full items-center">
         {!fullScreen && <Header stepnumber={1}></Header>}
@@ -110,30 +117,32 @@ function Customize({fullScreen, setFullScreen}) {
                             }}
                         >
                             <div className="relative w-full h-full bg-white border border-gray-300 drop-shadow-md p-10 text-xl">
-                                {elements.map((el) => (
-                                    <TextElement key={el.id} el={el} updateContent={updateContent} selectedId={selectedId} setSelectedId={setSelectedId}></TextElement>
+                                {textBoxes.map((el) => (
+                                    <TextElement key={el.id} el={el} selectedId={selectedId} setSelectedId={setSelectedId} textSelectedId={textSelectedId} setTextSelectedId={setTextSelectedId}></TextElement>
                                 ))}
                             </div>
                         
                         </div>
                         
                     </div>
-                    <VerticalToolbar addTextBox={addTextBox} deleteElem={deleteElem} selectedId={selectedId}></VerticalToolbar>
+                    <VerticalToolbar selectedId={selectedId} setSelectedId={setSelectedId} setTextSelectedId={setTextSelectedId}></VerticalToolbar>
                 </div>
             </div>
         </div>
     );
 }
 
-function TextElement({el, updateContent, selectedId, setSelectedId}){
+function TextElement({el, selectedId, setSelectedId, textSelectedId, setTextSelectedId }){
     const ref = useRef(null);
     const nodeRef = useRef(null);
+    const {updateTextBox} = useDocument()
 
     useEffect(() => {
     const handleClickOutside = (event) => {
-        if (ref.current && !ref.current.contains(event.target)) {
+        if (ref.current && !ref.current.contains(event.target) && !event.target.closest('[data-ignore-click-outside]')) {
         // Ritarda leggermente il reset per far eseguire prima altri onClick
-        setTimeout(() => setSelectedId(null), 500);
+        setSelectedId(null)
+        setTextSelectedId(null)
         }
     };
 
@@ -142,51 +151,72 @@ function TextElement({el, updateContent, selectedId, setSelectedId}){
     }, [setSelectedId]);
 
     const handleDoubleClick = () => {
-        setSelectedId(el.id);
+        setTextSelectedId(el.id)
         // Focus dopo un tick per assicurarsi che il componente venga aggiornato
         setTimeout(() => {
         ref.current?.focus();
         }, 0);
     };
 
+    const handleSingleClick = () =>{
+        if (textSelectedId !== el.id) setTextSelectedId(null)
+        setSelectedId(el.id)
+    }
+
   return (
     <Draggable
       nodeRef={nodeRef}
       bounds="parent"
-      disabled={selectedId === el.id} 
+      disabled={textSelectedId === el.id} 
       defaultPosition={{ x: el.position.x, y: el.position.y }}
-      onStop={(e, data) => {
-        el.position = { x: data.x, y: data.y }; // aggiorna stato esterno se serve
-      }}
+      onStop={(e, data) => updateTextBox(el.id,{
+        position: {x:data.x, y: data.y}
+      })}
       
     >
-      <div ref={nodeRef} style={{ position: 'absolute' }}>
+      <div ref={nodeRef} style={{ position: 'absolute' }} data-ignore-click-outside>
         
           <TextareaAutosize
             ref={ref}
             id={el.id}
             value={el.content}
+            onClick={handleSingleClick}
             onDoubleClick={handleDoubleClick}
             onMouseDown={(e) => {
-                if (selectedId !== el.id) {
+                if (textSelectedId !== el.id) {
                 e.preventDefault(); // previene il focus sul primo clic
                 }
             }}
-            onChange={(e) => updateContent(el.id, e.target.value)}
+            onChange={(e) => updateTextBox(el.id, {
+                content: e.target.value
+            })}
+            onBlur={() => {
+            if (ref.current) {
+                const { offsetWidth, offsetHeight } = ref.current;
+                updateTextBox(el.id, {
+                w: offsetWidth ,
+                h: offsetHeight -16,
+                });
+            }
+            }}
             placeholder="Text..."
-            className= {selectedId !== el.id? "hover:border-[#888]" : ""}
-            readOnly={selectedId !== el.id}
+            className= {textSelectedId !== el.id? "hover:border-[#888]" : ""}
+            readOnly={textSelectedId !== el.id}
             style={{
-              cursor: selectedId === el.id? "text": "move",
-              
-              fontSize: '1rem',
+              width: el.w,
+              //height: el.h,
+              cursor: textSelectedId === el.id? "text": "move",
+              fontSize: el.textSize,
+              fontWeight: el.bold ? "bold" : "normal",
+              fontStyle: el.italic ? "italic" : "normal",
+              textDecoration: el.underlined ? "underline" : "none",
+              color: el.textColor,
               padding: '8px',
               border: '2px dashed',
               borderRadius: '6px',
-              borderColor: selectedId === el.id ? '#2196f3' : '#ccc',
-              backgroundColor: 'white',
+              borderColor: textSelectedId === el.id ? '#2196f3' : selectedId === el.id? "#888" : '#ccc',
               outline: 'none',
-              resize: selectedId === el.id? 'both': 'none',
+              resize: textSelectedId === el.id? 'both': 'none',
               minHeight: 50,
               minWidth: 100,
               maxWidth: PAGE_WIDTH - el.position.x - 80,
@@ -200,9 +230,10 @@ function TextElement({el, updateContent, selectedId, setSelectedId}){
 }
 
 function HorizontalToolBar({zoomIn,zoomOut,scale,fullScreen,setFullScreen}){
+
     return(
         <div className="flex w-[90%] h-[10%] justify-between">
-            <div className="flex gap-2 items-center my-2">
+            <div className="flex gap-2 items-center my-2" data-ignore-click-outside>
                 <Tooltip title="Undo" placement="bottom">
                     <IconButton>
                     <UndoIcon />
@@ -233,26 +264,86 @@ function HorizontalToolBar({zoomIn,zoomOut,scale,fullScreen,setFullScreen}){
                 </IconButton>
                 
             </div>
-            <div className="flex w-1/3">
+            <div className="flex w-1/3" data-ignore-click-outside>
                     <TextField fullWidth label="Exercise Title" variant="standard"></TextField>
                 </div>
-            <div className="flex items-center my-2">
+            <div className="flex items-center my-2" data-ignore-click-outside>
                 <Button variant="contained" endIcon={<NavigateNextIcon></NavigateNextIcon>}>Export</Button>
             </div>
         </div>
     )
 }
 
-function VerticalToolbar({addTextBox,deleteElem, selectedId}) {
+function VerticalToolbar({selectedId, setSelectedId, setTextSelectedId}) {
     const [regenOpen, setRegenOpen] = useState(false)
     const [textFormat, setTextFormat] = useState([]);
+    const {textBoxes, images, updateTextBox, deleteTextBox, addTextBox} = useDocument()
+    const [increseEnabled, setIncreaseEnabled] = useState(true)
+    const [decreseEnabled, setDecreaseEnabled] = useState(true)
+
+    const isText = textBoxes.some(el => el.id === selectedId);
+    const isImage = images.some(img => img.id === selectedId);
+
+    const handleRegenToggle = (event, value) => {
+        setRegenOpen(value);
+    };
+
+    const handleDelete= () =>{
+
+        if (isText) deleteTextBox(selectedId);
+        else if (isImage) deleteImage(selectedId);
+
+        setSelectedId(null);
+        setTextSelectedId(null);
+    }
+
+    const handleFontSize = (increase) =>{
+        const elem = textBoxes.find(e => e.id === selectedId)
+        if (!elem) return;
+
+        if (increase){
+            updateTextBox(selectedId,{
+                textSize: elem.textSize + 2
+            })
+            if (elem.textSize + 2 >= 24) setIncreaseEnabled(false)
+            if (!decreseEnabled) setDecreaseEnabled(true)
+        }
+        else{
+            updateTextBox(selectedId,{
+                textSize: elem.textSize - 2
+            })
+            if (elem.textSize - 2 <= 12) setDecreaseEnabled(false)
+            if (!increseEnabled) setIncreaseEnabled(true)
+        }
+    }
 
     const handleTextFormat = (event, newFormats) => {
         setTextFormat(newFormats);
+
+        const elem = textBoxes.find(e => e.id === selectedId);
+        if (!elem) return;
+
+        updateTextBox(selectedId, {
+            bold: newFormats.includes("bold"),
+            italic: newFormats.includes("italic"),
+            underlined: newFormats.includes("underlined"),
+        });
     };
-    const handleRegen = (event, value) => {
-        setRegenOpen(value);
-    };
+
+    useEffect(()=>{
+        if (isText) {
+            const elem = textBoxes.find(e => e.id === selectedId);
+            if (!elem) return;
+            let elemFormat = []
+            if (elem.bold) elemFormat.push('bold')
+            if (elem.italic) elemFormat.push('italic')
+            if (elem.underlined) elemFormat.push('underlined')
+            setTextFormat(elemFormat)
+        }
+        else(
+            setTextFormat([])
+        )
+    },[selectedId, textBoxes])
 
     return (
         <Stack direction="column" spacing={1} sx={{
@@ -264,36 +355,38 @@ function VerticalToolbar({addTextBox,deleteElem, selectedId}) {
             <ToggleButtonGroup orientation="vertical" color="primary" 
             exclusive
             value={regenOpen} 
-            onChange={handleRegen}>
+            onChange={handleRegenToggle}>
                 <Tooltip title="Generate Again" placement="right">
-                    <ToggleButton value="full">
+                    <ToggleButton value="full" data-ignore-click-outside>
                     <AutoModeIcon />
                     </ToggleButton>
                 </Tooltip>
 
                 <Tooltip title="Regenarate Element" placement="right">
-                    <ToggleButton value="element">
+                    <div data-ignore-click-outside>
+                    <ToggleButton value="element" disabled={selectedId===null} >
                     <GeneratingTokensIcon />
                     </ToggleButton>
+                    </div>
                 </Tooltip>
             </ToggleButtonGroup>
 
             <ToggleButtonGroup orientation="vertical">
                 <Tooltip title="Add Text" placement="right">
-                    <ToggleButton value="text" onClick={addTextBox}>
+                    <ToggleButton value="text" onClick={addTextBox} data-ignore-click-outside>
                     <TextFieldsIcon />
                     </ToggleButton>
                 </Tooltip>
 
                 <Tooltip title="Add Image" placement="right">
-                    <ToggleButton value="image">
+                    <ToggleButton value="image" data-ignore-click-outside>
                     <AddPhotoAlternateIcon />
                     </ToggleButton>
                 </Tooltip>
 
                 <Tooltip title="Delete" placement="right">
-                    <div>
-                    <ToggleButton value="delete" disabled={selectedId===null} onClick={()=>deleteElem()}>
+                    <div data-ignore-click-outside>
+                    <ToggleButton value="delete" disabled={selectedId===null} onClick={()=>handleDelete()}>
                     <DeleteIcon />
                     </ToggleButton>
                     </div>
@@ -302,48 +395,100 @@ function VerticalToolbar({addTextBox,deleteElem, selectedId}) {
 
             <ToggleButtonGroup orientation="vertical">
                 <Tooltip title="Decrease Text Size" placement="right">
-                    <ToggleButton value="increase">
+                    <div data-ignore-click-outside>
+                    <ToggleButton value="increase" disabled={!isText || !decreseEnabled} onClick={()=>handleFontSize(false)}>
                     <TextDecreaseIcon />
                     </ToggleButton>
+                    </div>
                 </Tooltip>
 
                 <Tooltip title="Increase Text Size" placement="right">
-                    <ToggleButton value="decrease">
+                    <div data-ignore-click-outside>
+                    <ToggleButton value="decrease" disabled={!isText || !increseEnabled} onClick={()=>handleFontSize(true)}>
                     <TextIncreaseIcon />
                     </ToggleButton>
+                    </div>
                 </Tooltip>
 
-                <Tooltip title="Change Text Color" placement="right">
-                    <ToggleButton value="textcolor">
-                    <FormatColorTextIcon />
-                    </ToggleButton>
-                </Tooltip>
+                <TextColorButton selectedId={selectedId} isText={isText}></TextColorButton>
             </ToggleButtonGroup>
 
             <ToggleButtonGroup orientation="vertical"
-            value={textFormat} 
+            value={isText? textFormat: []} 
             onChange={handleTextFormat}>
                 <Tooltip title="Bold" placement="right">
-                    <ToggleButton value="bold">
+                    <div data-ignore-click-outside>
+                    <ToggleButton value="bold" disabled={!isText}>
                     <FormatBoldIcon />
                     </ToggleButton>
+                    </div>
                 </Tooltip>
 
                 <Tooltip title="Italic" placement="right">
-                    <ToggleButton value="italic">
+                    <div data-ignore-click-outside>
+                    <ToggleButton value="italic" disabled={!isText} >
                     <FormatItalicIcon />
                     </ToggleButton>
+                    </div>
                 </Tooltip>
 
                 <Tooltip title="Underlined" placement="right">
-                <ToggleButton value="underlined">
+                    <div data-ignore-click-outside>
+                    <ToggleButton value="underlined" disabled={!isText}>
                     <FormatUnderlinedIcon />
-                </ToggleButton>
+                    </ToggleButton>
+                    </div>
                 </Tooltip>
             </ToggleButtonGroup>
         </Stack>
     );
 }
+
+const TextColorButton = ({ selectedId, isText }) => {
+  const { textBoxes, updateTextBox } = useDocument();
+  const [anchorEl, setAnchorEl] = useState(null);
+
+  const handleOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => setAnchorEl(null);
+
+  const currentColor =
+    selectedId && textBoxes.find((b) => b.id === selectedId)?.textColor;
+
+  const handleColorChange = (newColor) => {
+    console.log(newColor)
+    if (selectedId) {
+      updateTextBox(selectedId, { textColor: newColor });
+    }
+  };
+
+  return (
+    <>
+      <Tooltip title="Change Text Color" placement="right">
+        <div data-ignore-click-outside>
+          <ToggleButton
+            value="textcolor"
+            disabled={!isText}
+            onClick={handleOpen}
+            
+          >
+            <FormatColorTextIcon />
+          </ToggleButton>
+        </div>
+      </Tooltip>
+
+      <ColorPicker
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleClose}
+        color={currentColor || "#000000"}
+        onChange={handleColorChange}
+      />
+    </>
+  );
+};
 
 
 export {Customize}

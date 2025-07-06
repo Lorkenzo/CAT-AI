@@ -6,7 +6,7 @@ import 'swiper/css/pagination';
 import { NavBar } from "./Components/Navbar";
 import { Settings } from "./Components/Settings";
 import { Generate } from "./Components/Generate";
-import { Customize } from "./Components/Customize";
+import { Customize } from "./Components/Customize/Customize";
 import { Export } from "./Components/Export";
 import { Home } from "./Components/Home";
 import { Routes, Route, Outlet } from "react-router-dom";

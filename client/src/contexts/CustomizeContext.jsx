@@ -70,11 +70,11 @@ export const DocumentProvider = ({ children }) => {
 
   // ───────────── IMAGES ─────────────
   const addImage = (url) => {
+    console.log(images)
     const newImage = {
       id: Date.now(),
-      url,
-      x: 16,
-      y: 16,
+      url: "http://localhost:3001/uploads/white-cat-logo-outlined-holding-a-pencil.png",
+      position: {x:16,y:16},
       w: 200,
       h: 200,
     };

@@ -2,6 +2,9 @@ import React, { useRef, useEffect, useState } from 'react';
 import Draggable from 'react-draggable';
 import { useDocument } from '../../contexts/CustomizeContext';
 
+const PAGE_WIDTH = 794;
+const PAGE_HEIGHT = 1123;
+
 function ImageElement({ el, selectedId, setSelectedId, imageSelectedId, setImageSelectedId }) {
   const nodeRef = useRef(null);
   const containerRef = useRef(null);
@@ -26,7 +29,7 @@ function ImageElement({ el, selectedId, setSelectedId, imageSelectedId, setImage
   }, [setSelectedId]);
 
   const handleResize = () => {
-    if (containerRef.current) {
+    if (containerRef.current && imageSelectedId === el.id) {
       const { offsetWidth, offsetHeight } = containerRef.current;
       setSize({ width: offsetWidth, height: offsetHeight });
 
@@ -46,6 +49,13 @@ function ImageElement({ el, selectedId, setSelectedId, imageSelectedId, setImage
     setImageSelectedId(el.id);
   };
 
+  const borderClass =
+  imageSelectedId === el.id
+    ? 'border-2 border-[#2196f3]'
+    : selectedId === el.id
+    ? 'border-2 border-[#888]'
+    : 'hover:border-2 hover:border-[#ccc] border-2 border-transparent';
+
   return (
     <Draggable
       nodeRef={nodeRef}
@@ -63,13 +73,9 @@ function ImageElement({ el, selectedId, setSelectedId, imageSelectedId, setImage
         data-ignore-click-outside
         onClick={handleSingleClick}
         onDoubleClick={handleDoubleClick}
+        className={`absolute rounded border-dashed p-0 ${borderClass}`}
         style={{
-          position: 'absolute',
           cursor: imageSelectedId === el.id ? 'default' : 'move',
-          border: '2px dashed',
-          borderColor: imageSelectedId === el.id ? '#2196f3' : selectedId === el.id ? '#888' : '#ccc',
-          borderRadius: 4,
-          padding: 2,
           backgroundColor: 'transparent',
         }}
       >
@@ -79,12 +85,12 @@ function ImageElement({ el, selectedId, setSelectedId, imageSelectedId, setImage
           style={{
             resize: imageSelectedId === el.id ? 'both' : 'none',
             overflow: 'hidden',
-            width: size.width,
-            height: size.height,
+            width: el.w,
+            height: el.h,
             minWidth: 50,
             minHeight: 50,
-            maxWidth: `calc(100vw - ${el.position.x + 80}px)`,
-            maxHeight: `calc(100vh - ${el.position.y + 80}px)`,
+            maxWidth: PAGE_WIDTH - el.position.x - 80,
+            maxHeight: PAGE_HEIGHT - el.position.y - 80,
           }}
         >
           <img
@@ -94,7 +100,7 @@ function ImageElement({ el, selectedId, setSelectedId, imageSelectedId, setImage
             style={{
               width: '100%',
               height: '100%',
-              objectFit: 'contain',
+              objectFit: 'fill',
               display: 'block',
               pointerEvents: imageSelectedId === el.id ? 'auto' : 'none', // blocca interazioni quando non selezionata
               userSelect: 'none',

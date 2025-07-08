@@ -12,6 +12,33 @@ const handleUploadFile = async (formData) => {
     return data;
 }
 
+const handleDownloadFile = async (fileUrl, fileName) => {
+    try {
+      const response = await fetch(fileUrl, {
+        method: "GET",
+      });
+
+      if (!response.ok) {
+        throw new Error("Download fallito");
+      }
+
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+
+      // Pulizia
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error("Errore durante il download:", error);
+    }
+  };
+
 const handleDeleteFile = async (path) => {
    const response = await fetch(`${SERVER_URL}/api/file/delete`, {
       method: 'DELETE',
@@ -46,6 +73,7 @@ const handleTextExtraction = async (path) => {
 
 const API = {
   handleUploadFile,
+  handleDownloadFile,
   handleDeleteFile,
   handleTextExtraction
 }

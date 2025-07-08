@@ -23,77 +23,106 @@ const getInitialImages = () => {
 export const DocumentProvider = ({ children }) => {
   const [textBoxes, setTextBoxes] = useState(getInitialTextBoxes);
   const [images, setImages] = useState(getInitialImages);
+  const [history, setHistory] = useState([]);
+  const [redoStack, setRedoStack] = useState([]);
 
-  // Salva ogni volta che cambia
   useEffect(() => {
-    localStorage.setItem("textBoxes", JSON.stringify(textBoxes));
+  localStorage.setItem("textBoxes", JSON.stringify(textBoxes));
   }, [textBoxes]);
 
   useEffect(() => {
     localStorage.setItem("images", JSON.stringify(images));
   }, [images]);
 
+  // ───────────── HISTORY ─────────────
+  const saveToHistory = (newTextBoxes, newImages) => {
+    setHistory((prev) => [...prev, { textBoxes, images }]);
+    setRedoStack([]); // Clear redo on new action
+    setTextBoxes(newTextBoxes);
+    setImages(newImages);
+  };
+
+  const undo = () => {
+    if (history.length === 0) return;
+    const prevState = history[history.length - 1];
+    setHistory((prev) => prev.slice(0, -1));
+    setRedoStack((prev) => [...prev, { textBoxes, images }]);
+    setTextBoxes(prevState.textBoxes);
+    setImages(prevState.images);
+  };
+
+  const redo = () => {
+    if (redoStack.length === 0) return;
+    const nextState = redoStack[redoStack.length - 1];
+    setRedoStack((prev) => prev.slice(0, -1));
+    setHistory((prev) => [...prev, { textBoxes, images }]);
+    setTextBoxes(nextState.textBoxes);
+    setImages(nextState.images);
+  };
+
   // ───────────── TEXT BOX ─────────────
-
-  let newY = 16
   const addTextBox = () => {
-    if (textBoxes.length >=1 ){
-        console.log(textBoxes)
-        const prevTextBox = textBoxes.sort((a,b) => b.position.y - a.position.y)[0]
-        newY = prevTextBox.position.y + prevTextBox.h + 16
+    let newY = 16;
+    if (textBoxes.length >= 1) {
+      const prevTextBox = [...textBoxes].sort((a, b) => b.position.y - a.position.y)[0];
+      newY = prevTextBox.position.y + prevTextBox.h + 16;
     }
-
     const newTextBox = {
       id: Date.now(),
-      position: {x: 16, y: newY},
+      position: { x: 16, y: newY },
       w: 200,
       h: 50,
-      content: "",
+      content: '',
       textSize: 16,
-      textColor: "#000000",
+      textColor: '#000000',
       bold: false,
       italic: false,
       underlined: false,
     };
-    setTextBoxes((prev) => [...prev, newTextBox]);
+    saveToHistory([...textBoxes, newTextBox], images);
   };
 
   const updateTextBox = (id, updates) => {
-    setTextBoxes((prev) =>
-      prev.map((box) => (box.id === id ? { ...box, ...updates } : box))
+    const updated = textBoxes.map((box) =>
+      box.id === id ? { ...box, ...updates } : box
     );
+    saveToHistory(updated, images);
   };
 
   const deleteTextBox = (id) => {
-    setTextBoxes((prev) => prev.filter((box) => box.id !== id));
+    const updated = textBoxes.filter((box) => box.id !== id);
+    saveToHistory(updated, images);
   };
 
   // ───────────── IMAGES ─────────────
   const addImage = (url) => {
-    console.log(images)
     const newImage = {
       id: Date.now(),
-      url: "http://localhost:3001/uploads/white-cat-logo-outlined-holding-a-pencil.png",
-      position: {x:16,y:16},
+      url,
+      position: { x: 16, y: 16 },
       w: 200,
       h: 200,
     };
-    setImages((prev) => [...prev, newImage]);
+    saveToHistory(textBoxes, [...images, newImage]);
   };
 
   const updateImage = (id, updates) => {
-    setImages((prev) =>
-      prev.map((img) => (img.id === id ? { ...img, ...updates } : img))
+    const updated = images.map((img) =>
+      img.id === id ? { ...img, ...updates } : img
     );
+    saveToHistory(textBoxes, updated);
   };
 
   const deleteImage = (id) => {
-    setImages((prev) => prev.filter((img) => img.id !== id));
+    const updated = images.filter((img) => img.id !== id);
+    saveToHistory(textBoxes, updated);
   };
 
   return (
     <DocumentContext.Provider
       value={{
+        history,
+        redoStack,
         textBoxes,
         images,
         addTextBox,
@@ -102,6 +131,8 @@ export const DocumentProvider = ({ children }) => {
         addImage,
         updateImage,
         deleteImage,
+        undo,
+        redo,
       }}
     >
       {children}

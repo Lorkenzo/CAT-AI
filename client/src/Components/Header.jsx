@@ -26,15 +26,15 @@ function Header({stepnumber}){
     const stepscaptionmap = {
     0: 'Load your exercise file or fill manually using the manual editor',
     1: 'Custom easily your generated exercise using toolbars',
-    2: 'Save your favorite exercise format as pdf or h5p',
+    2: 'Save your favorite exercise format as pdf',
     3: 'Save other formats or generate again'
     };
 
     return(
         <div className="w-full h-fit justify-items-center">
-            <div className='w-2/3 mt-3'>
+            <div className='flex justify-center w-2/3 mt-3'>
             <Breadcrumbs aria-label="breadcrumb" separator={<NavigateNextIcon fontSize="small" />}>
-                    <Link underline="hover" color="inherit" href="/" variant='body2'>
+                    <Link underline="hover" color="inherit" href="/" variant='subtitle2'>
                         <HomeIcon sx={{ mr: 0.5 }} fontSize="inherit"/>
                         Home
                     </Link>
@@ -44,25 +44,21 @@ function Header({stepnumber}){
                             <Link underline="hover" color="inherit" href={`/${stepsmap[i].toLowerCase()}`} variant='body2'>{e}</Link>
                         )
                     }
-                    <Typography key="3" sx={{ color: 'text.primary' }} variant='body2'>
+                    <Typography key="3" sx={{ color: 'text.primary' }} variant='subtitle2'>
                         {stepsmap[stepnumber]} 
                     </Typography>
                 </Breadcrumbs>
             </div>
-            <div className="w-[50%] h-fit">
+            <div className="flex w-[50%] justify-center h-fit">
 
-                <Typography variant='h5' className='pt-2'>
-                    {stepsmap[stepnumber]} Exercise
-                </Typography>
-
-                <Typography variant='subtitle2' className='pt-2 max-md:hidden'>
-                    {stepscaptionmap[stepnumber]} 
+                <Typography variant='h6' className='py-2'>
+                    <b>{stepsmap[stepnumber]} Exercise</b>
                 </Typography>
 
                 <Divider className='pt-2'/>
                 
             </div>
-            <div className='w-2/3 mt-2 mb-3'>
+            <div className='w-[60%] mt-2 mb-3'>
                     <Stepper activeStep={stepnumber}>
                         {steps.map((label) => (
                         <Step key={label}>

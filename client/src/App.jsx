@@ -14,6 +14,7 @@ import { Container } from "@mui/material";
 import Box from '@mui/material/Box';
 import { FormProvider } from "./contexts/FormContext";
 import { DocumentProvider } from "./contexts/CustomizeContext";
+import { ExportProvider } from "./contexts/ExportData";
 
 function App() {
     const [fullScreen, setFullScreen] = useState(false)
@@ -21,6 +22,7 @@ function App() {
     return (
       <DocumentProvider>
         <FormProvider>
+          <ExportProvider>
             <Routes>
             <Route element={
               <>
@@ -51,7 +53,7 @@ function App() {
               
             </Route>
           </Routes>
-        
+        </ExportProvider>
       </FormProvider>
     </DocumentProvider>
     );

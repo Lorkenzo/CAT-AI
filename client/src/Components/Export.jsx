@@ -1,9 +1,114 @@
-import { Header } from "./Header"
+import { Header } from "./Header";
+import { useExportData } from "../contexts/ExportData";
+import { useEffect, useRef, useState } from 'react';
+import { CircularProgress, Autocomplete, TextField, Chip, Button } from "@mui/material";
+import FileCopyIcon from '@mui/icons-material/FileCopy';
+import DownloadIcon from '@mui/icons-material/Download';
+import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
+import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+GlobalWorkerOptions.workerSrc = pdfWorker;
 
-function Export(){
-    return(
-        <Header stepnumber={2}></Header>
-    )
-}
+import API from "../API/API.mjs";
 
-export {Export}
+const PAGE_WIDTH = 794;
+const PAGE_HEIGHT = 1123;
+
+const Export = () => {
+  const { exportData } = useExportData();
+  const canvasRef = useRef();
+  const [loading, setLoading] = useState(true)
+  const [exerciseType, setExerciseType] = useState("Exercise")
+
+  const getUrl = ()=>{
+    return exerciseType === "Exercise"? exportData.url 
+    : exerciseType === "Exercise + Exam Heading" ? exportData.urlHeading
+    : ""
+  }
+
+  useEffect(() => {
+  if (!exportData?.url) {
+    setTimeout(()=>{},[1000])
+    return
+  }
+  else{
+    setLoading(false)
+  }
+
+  const renderPDF = async (url) => {
+        let renderTask = null;
+
+        try {
+        const loadingTask = getDocument(url);
+        const pdf = await loadingTask.promise;
+        const page = await pdf.getPage(1);
+
+        const viewport = page.getViewport({ scale: 1.5 });
+        const canvas = canvasRef.current;
+        const context = canvas.getContext('2d');
+
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        const renderContext = {
+            canvasContext: context,
+            viewport,
+        };
+
+        // Salva la renderTask e attendila
+        renderTask = page.render(renderContext);
+        await renderTask.promise;
+        } catch (error) {
+            console.log("preview rendered")
+        }
+    };
+    const url = getUrl()
+
+    renderPDF(url);
+    }, [exerciseType,exportData]);
+
+    
+    const handleDownloadFile = () => {
+        const url = getUrl()
+        const filename = `${exerciseType}.pdf`
+        API.handleDownloadFile(url,filename)
+    };
+
+  return (
+    <div className="flex flex-col w-full h-[120%] items-center">
+      <Header stepnumber={2} />
+      <div className="flex flex-row justify-between w-[80%] my-2">
+        <div className="flex flex-row items-center w-[50%] gap-3">
+        <Chip color="primary" variant="outlined" size="large" icon={<FileCopyIcon />} label="Format" />
+        <Autocomplete 
+        fullWidth
+        disableClearable
+        value={exerciseType}
+        options={["Exercise", "Exercise + Exam Heading"]} 
+        onChange={(event, newValue) => {
+          setExerciseType(newValue);
+        }}
+        renderInput={(params) => (
+          <TextField {...params} variant="outlined" label="Type" size="small"/>
+        )}></Autocomplete>
+        </div>
+        <div className="flex items-center " data-ignore-click-outside>
+            <Button onClick={handleDownloadFile} variant="contained" endIcon={<DownloadIcon></DownloadIcon>}>Save</Button>
+        </div>
+      </div>
+      
+        <div className="flex justify-center items-center relative w-[80%] h-full overflow-auto bg-gray-100">
+            {!loading ? (
+            <canvas
+                ref={canvasRef}
+                style={{ border: '1px solid #ccc',
+                    width: "auto",
+                    height: "95%",
+                    display: 'block',
+                }}
+            />) : <CircularProgress></CircularProgress>}
+        </div>
+    </div>
+  );
+};
+
+export { Export };

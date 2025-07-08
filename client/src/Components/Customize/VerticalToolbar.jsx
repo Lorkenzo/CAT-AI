@@ -10,17 +10,20 @@ import FormatColorTextIcon from '@mui/icons-material/FormatColorText';
 import { useDocument } from "../../contexts/CustomizeContext";
 import AutoModeIcon from '@mui/icons-material/AutoMode';
 import GeneratingTokensIcon from '@mui/icons-material/GeneratingTokens';
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Stack, ToggleButton, ToggleButtonGroup, Tooltip, Box, TextField, Popover, Typography, Button } from '@mui/material';
 import { ColorPicker } from './ColorPicker';
+import API from '../../API/API.mjs';
 
-function VerticalToolbar({selectedId, setSelectedId, setTextSelectedId}) {
+function VerticalToolbar({selectedId, setSelectedId, textSelectedId, setTextSelectedId, imageSelectedId,  setImageSelectedId}) {
     const [textFormat, setTextFormat] = useState([]);
     const {textBoxes, images, updateTextBox, deleteTextBox, addTextBox, updateImage, deleteImage, addImage} = useDocument()
     const [increseEnabled, setIncreaseEnabled] = useState(true)
     const [decreseEnabled, setDecreaseEnabled] = useState(true)
     const [regenOpen, setRegenOpen] = useState(null); 
     const [anchorEl, setAnchorEl] = useState(null);  
+    const [uploading, setUploading] = useState(false);
+    const imageInputRef = useRef(null);
 
     const isText = textBoxes.some(el => el.id === selectedId);
     const isImage = images.some(img => img.id === selectedId);
@@ -39,15 +42,73 @@ function VerticalToolbar({selectedId, setSelectedId, setTextSelectedId}) {
         setRegenOpen(null);
         setAnchorEl(null);
     };
+    //-----ADD IMAGE -----------
 
-    const handleDelete= () =>{
+    const handleImage = async (selectedImage) =>{
+        if (!selectedImage) return;
+    const data = new FormData();
+    data.append('file', selectedImage);
+
+    try {
+      setUploading(true);
+      const file = await API.handleUploadFile(data); // chiamata fetch
+      addImage(file.url)
+      
+    } catch (err) {
+        console.log(err);
+    } finally {
+      setUploading(false);
+    }
+    }
+
+    const handleFileSelect = async (event) => {
+        const selected = event.target.files[0];
+        handleImage(selected)
+    };
+
+
+    //-----DELETE ELEMENT---------
+
+    const handleDelete= async () =>{
 
         if (isText) deleteTextBox(selectedId);
-        else if (isImage) deleteImage(selectedId);
+        else if (isImage) {
+            // const img = images.find(e => e.id === selectedId)
+            // const relativePath = new URL(img.url).pathname.replace(/^\/+/, '');
+            // await API.handleDeleteFile(relativePath)
+            deleteImage(selectedId);
+            if (imageInputRef.current) imageInputRef.current.value = '';
+        }
 
         setSelectedId(null);
         setTextSelectedId(null);
+        setImageSelectedId(null);
     }
+
+    useEffect(() => {
+    const handleKeyDown = async (e) => {
+      if ((e.key === "Delete" || e.key === "Backspace") && selectedId && !textSelectedId && !imageSelectedId) {
+        // Verifica se l'id selezionato è una textbox o un'immagine
+        const isText = textBoxes.some(el => el.id === selectedId);
+        const isImage = images.some(img => img.id === selectedId);
+
+        if (isText) deleteTextBox(selectedId);
+        else if (isImage) {
+            // const img = images.find(e => e.id === selectedId)
+            // const relativePath = new URL(img.url).pathname.replace(/^\/+/, '');
+            // await API.handleDeleteFile(relativePath)
+            deleteImage(selectedId);
+            if (imageInputRef.current) imageInputRef.current.value = '';
+        }
+
+        setSelectedId(null);
+        setTextSelectedId(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [selectedId, deleteTextBox, deleteImage, textBoxes, images]);
 
     const handleFontSize = (increase) =>{
         const elem = textBoxes.find(e => e.id === selectedId)
@@ -68,6 +129,8 @@ function VerticalToolbar({selectedId, setSelectedId, setTextSelectedId}) {
             if (!increseEnabled) setIncreaseEnabled(true)
         }
     }
+
+    //----TEXT CHANGE--------
 
     const handleTextFormat = (event, newFormats) => {
         setTextFormat(newFormats);
@@ -141,8 +204,15 @@ function VerticalToolbar({selectedId, setSelectedId, setTextSelectedId}) {
                 </Tooltip>
 
                 <Tooltip title="Add Image" placement="right">
-                    <ToggleButton value="image" onClick={()=>addImage("")} data-ignore-click-outside>
+                    <ToggleButton value="image" onClick={()=>imageInputRef.current.click()} data-ignore-click-outside>
                     <AddPhotoAlternateIcon />
+                    <input
+                        type="file"
+                        accept="image/*"
+                        ref={imageInputRef}
+                        style={{display:"none"}}
+                        onChange={handleFileSelect}
+                    />
                     </ToggleButton>
                 </Tooltip>
 

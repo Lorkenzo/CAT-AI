@@ -5,6 +5,7 @@ import { VerticalToolbar } from "./VerticalToolbar";
 import { TextElement } from "./TextElement";
 import { ImageElement } from "./ImageElement";
 import { Header } from "../Header"
+import { CircularProgress } from "@mui/material";
 
 const PAGE_WIDTH = 794;
 const PAGE_HEIGHT = 1123;
@@ -18,6 +19,7 @@ function Customize({fullScreen, setFullScreen}) {
     const [imageSelectedId, setImageSelectedId] = useState(null);
     const [scale, setScale] = useState(1);
     const [offsetX, setOffsetX] = useState(0);
+    const [loading, setLoading] = useState(false)
     const ZOOM_STEP = 0.1;
     const MIN_ZOOM = 0.3;
     const MAX_ZOOM = 1.5;
@@ -33,7 +35,10 @@ function Customize({fullScreen, setFullScreen}) {
         const isImage = images.some(img => img.id === selectedId);
 
         if (isText) deleteTextBox(selectedId);
-        else if (isImage) deleteImage(selectedId);
+        else if (isImage) {
+
+            deleteImage(selectedId);
+        }
 
         setSelectedId(null);
         setTextSelectedId(null);
@@ -76,25 +81,27 @@ function Customize({fullScreen, setFullScreen}) {
 
 
     return (
-        <div className="flex flex-col w-full h-full items-center">
+        <div className="flex flex-col w-full h-[150%] items-center">
         {!fullScreen && <Header stepnumber={1}></Header>}
             <div className={`flex flex-col w-full ${fullScreen?"h-full":"h-[85%]"} items-center mb-3`}>
-                <HorizontalToolBar zoomIn={zoomIn} zoomOut={zoomOut} scale={scale} fullScreen={fullScreen} setFullScreen={setFullScreen}></HorizontalToolBar>
+                <HorizontalToolBar zoomIn={zoomIn} zoomOut={zoomOut} scale={scale} fullScreen={fullScreen} setFullScreen={setFullScreen} setSelectedId={setSelectedId} setTextSelectedId={setTextSelectedId} setImageSelectedId={setImageSelectedId} setLoading={setLoading}></HorizontalToolBar>
                 <div className="flex flex-row w-full h-full justify-center">
                     <div
                     ref={wrapperRef}
                     className="relative w-[85%] h-full overflow-auto bg-gray-100 pt-3" 
                     >
                         {/* Contenuto centrato con offset dinamico */}
+                        {loading && <CircularProgress></CircularProgress>}
                         <div
                             className="absolute origin-top-left"
                             style={{
                             width: PAGE_WIDTH,
                             height: PAGE_HEIGHT,
                             transform: `translateX(${offsetX}px) scale(${scale})`,
+                            
                             }}
                         >
-                            <div className="relative w-full h-full bg-white border border-gray-300 drop-shadow-md p-10 text-xl">
+                            <div id="document" className="relative w-full h-full bg-white border border-gray-300 drop-shadow-md px-10 pt-10 pb-24 text-xl">
                                 {textBoxes.map((el) => (
                                     
                                     <TextElement key={el.id} el={el} selectedId={selectedId} setSelectedId={setSelectedId} textSelectedId={textSelectedId} setTextSelectedId={setTextSelectedId}></TextElement>
@@ -106,11 +113,10 @@ function Customize({fullScreen, setFullScreen}) {
                                     ))
                                 }
                             </div>
-                        
+                    
                         </div>
-                        
                     </div>
-                    <VerticalToolbar selectedId={selectedId} setSelectedId={setSelectedId} setTextSelectedId={setTextSelectedId}></VerticalToolbar>
+                    <VerticalToolbar selectedId={selectedId} setSelectedId={setSelectedId} textSelectedId={textSelectedId} setTextSelectedId={setTextSelectedId} imageSelectedId={imageSelectedId} setImageSelectedId={setImageSelectedId}></VerticalToolbar>
                 </div>
             </div>
         </div>

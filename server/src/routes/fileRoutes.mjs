@@ -32,7 +32,7 @@ const storage = multer.diskStorage({
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
     const base = path.basename(file.originalname, ext);
-    const safeName = base.replace(/\s+/g, '_'); // rimuovi spazi
+    const safeName = base.replace(/\s+/g, '_'); 
     cb(null, `${safeName}-${Date.now()}${ext}`);
   },
   limits: { fileSize: MAX_FILE_SIZE },

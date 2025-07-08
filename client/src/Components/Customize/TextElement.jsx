@@ -37,6 +37,14 @@ function TextElement({el, selectedId, setSelectedId, textSelectedId, setTextSele
         setSelectedId(el.id)
     }
 
+  const borderClass =
+  textSelectedId === el.id
+    ? 'border-2 border-[#2196f3]'
+    : selectedId === el.id
+    ? 'border-2 border-[#888]'
+    : 'hover:border-2 hover:border-[#ccc] border-2 border-transparent';
+
+
   return (
     <Draggable
       nodeRef={nodeRef}
@@ -65,8 +73,8 @@ function TextElement({el, selectedId, setSelectedId, textSelectedId, setTextSele
             onChange={(e) => updateTextBox(el.id, {
                 content: e.target.value
             })}
-            onBlur={() => {
-            if (ref.current) {
+            onMouseUp={() => {
+            if (ref.current && textSelectedId === el.id) {
                 const { offsetWidth, offsetHeight } = ref.current;
                 updateTextBox(el.id, {
                 w: offsetWidth ,
@@ -75,7 +83,7 @@ function TextElement({el, selectedId, setSelectedId, textSelectedId, setTextSele
             }
             }}
             placeholder="Text..."
-            className= {textSelectedId !== el.id? "hover:border-[#888]" : ""}
+            className={`absolute rounded border-dashed ${borderClass}`}
             readOnly={textSelectedId !== el.id}
             style={{
               width: el.w,
@@ -87,9 +95,6 @@ function TextElement({el, selectedId, setSelectedId, textSelectedId, setTextSele
               textDecoration: el.underlined ? "underline" : "none",
               color: el.textColor,
               padding: '8px',
-              border: '2px dashed',
-              borderRadius: '6px',
-              borderColor: textSelectedId === el.id ? '#2196f3' : selectedId === el.id? "#888" : '#ccc',
               outline: 'none',
               resize: textSelectedId === el.id? 'both': 'none',
               minHeight: 50,

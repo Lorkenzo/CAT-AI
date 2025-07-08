@@ -11,6 +11,12 @@ import { useFormData } from "../contexts/FormContext"
 
 function Generate(){
     const [file, setFile] = useState(null);
+    const navigate = useNavigate()
+
+    const handleSubmit = () =>{
+        navigate("/customize")
+    }
+
     return(
     <Routes>
         <Route element={
@@ -27,11 +33,11 @@ function Generate(){
             } />
 
             <Route path="/upload" element={
-            <UploadMode file={file} setFile={setFile}></UploadMode>
+            <UploadMode file={file} setFile={setFile} handleSubmit={handleSubmit}></UploadMode>
             } />
 
             <Route path="/manual" element={
-            <ManualMode></ManualMode>
+            <ManualMode handleSubmit={handleSubmit}></ManualMode>
             }/>
             
         </Route>
@@ -89,24 +95,25 @@ function ModeButtons(){
     )
 }
 
-function UploadMode({file, setFile}){
+function UploadMode({file, setFile, handleSubmit}){
+
     return(
         <>
         <FileUploader file={file} setFile={setFile}></FileUploader>
         {file && <GenerationForm></GenerationForm>}
         <div className="flex items-end justify-end w-full h-[15%]">
-            <Button size="medium" variant="contained" endIcon={<NavigateNextIcon/>} disabled={!file}>Generate</Button>
+            <Button onClick={handleSubmit} size="medium" variant="contained" endIcon={<NavigateNextIcon/>} disabled={!file}>Generate</Button>
         </div>
         </>
     )
 }
 
-function ManualMode(){
+function ManualMode({handleSubmit}){
     return(
         <>
         <GenerationForm></GenerationForm>
         <div className="flex items-center justify-end w-full h-[15%]">
-            <Button size="medium" variant="contained" endIcon={<NavigateNextIcon/>}>Generate</Button>
+            <Button onClick={handleSubmit} size="medium" variant="contained" endIcon={<NavigateNextIcon/>}>Generate</Button>
         </div>
         </>
     )

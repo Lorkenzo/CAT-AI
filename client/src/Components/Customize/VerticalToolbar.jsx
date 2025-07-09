@@ -87,7 +87,7 @@ function VerticalToolbar({selectedId, setSelectedId, textSelectedId, setTextSele
 
     useEffect(() => {
     const handleKeyDown = async (e) => {
-      if ((e.key === "Delete" || e.key === "Backspace") && selectedId && !textSelectedId && !imageSelectedId) {
+      if ((e.key === "Delete") && selectedId && !textSelectedId && !imageSelectedId) {
         // Verifica se l'id selezionato è una textbox o un'immagine
         const isText = textBoxes.some(el => el.id === selectedId);
         const isImage = images.some(img => img.id === selectedId);

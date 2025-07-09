@@ -4,7 +4,7 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import { NavBar } from "./Components/Navbar";
-import { Settings } from "./Components/Settings";
+import { Settings } from "./Components/Settings/Settings";
 import { Generate } from "./Components/Generate";
 import { Customize } from "./Components/Customize/Customize";
 import { Export } from "./Components/Export";

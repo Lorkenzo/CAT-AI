@@ -19,6 +19,7 @@
     "dayjs": "^1.11.13",
     "express-validator": "^7.2.0",
     "html2canvas": "^1.4.1",
+    "html2pdf.js": "^0.10.3",
     "jspdf": "^3.0.1",
     "pdfjs-dist": "^5.3.93",
     "prop-types": "^15.8.1",

@@ -86,7 +86,15 @@ export const DocumentProvider = ({ children }) => {
     const updated = textBoxes.map((box) =>
       box.id === id ? { ...box, ...updates } : box
     );
-    saveToHistory(updated, images);
+
+    const last = history[history.length - 1];
+    const isSame = last && JSON.stringify(last.textBoxes) === JSON.stringify(updated);
+
+    if (!isSame) {
+      saveToHistory(updated, images);
+    }
+    setTextBoxes(updated)
+
   };
 
   const deleteTextBox = (id) => {
@@ -110,7 +118,13 @@ export const DocumentProvider = ({ children }) => {
     const updated = images.map((img) =>
       img.id === id ? { ...img, ...updates } : img
     );
-    saveToHistory(textBoxes, updated);
+
+    const last = history[history.length - 1];
+    const isSame = last && JSON.stringify(last.images) === JSON.stringify(updated);
+
+    if (!isSame){
+      saveToHistory(textBoxes, updated);
+    }
   };
 
   const deleteImage = (id) => {

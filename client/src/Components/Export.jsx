@@ -22,6 +22,7 @@ const Export = () => {
   const getUrl = ()=>{
     return exerciseType === "Exercise"? exportData.url 
     : exerciseType === "Exercise + Exam Heading" ? exportData.urlHeading
+    : exerciseType === "Answer" ? exportData.urlAnswer
     : ""
   }
 
@@ -42,7 +43,7 @@ const Export = () => {
         const pdf = await loadingTask.promise;
         const page = await pdf.getPage(1);
 
-        const viewport = page.getViewport({ scale: 1.5 });
+        const viewport = page.getViewport({ scale: 2 });
         const canvas = canvasRef.current;
         const context = canvas.getContext('2d');
 
@@ -83,7 +84,7 @@ const Export = () => {
         fullWidth
         disableClearable
         value={exerciseType}
-        options={["Exercise", "Exercise + Exam Heading"]} 
+        options={["Exercise", "Exercise + Exam Heading", "Answer"]} 
         onChange={(event, newValue) => {
           setExerciseType(newValue);
         }}

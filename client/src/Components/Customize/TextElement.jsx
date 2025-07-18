@@ -2,6 +2,7 @@ import Draggable from 'react-draggable';
 import { TextareaAutosize } from "@mui/material"
 import { useState, useEffect, useRef } from "react";
 import { useDocument } from "../../contexts/CustomizeContext";
+import { useFormData } from "../../contexts/FormContext";
 
 const PAGE_WIDTH = 794;
 const PAGE_HEIGHT = 1123;
@@ -9,7 +10,8 @@ const PAGE_HEIGHT = 1123;
 function TextElement({el, selectedId, setSelectedId, textSelectedId, setTextSelectedId }){
     const ref = useRef(null);
     const nodeRef = useRef(null);
-    const {updateTextBox} = useDocument()
+    const {updateTextBox, textBoxes} = useDocument()
+    const {formData} = useFormData()
 
     useEffect(() => {
     const handleClickOutside = (event) => {
@@ -46,12 +48,20 @@ function TextElement({el, selectedId, setSelectedId, textSelectedId, setTextSele
     ? 'border-2 border-[#888]'
     : 'hover:border-2 hover:border-[#ccc] border-2 border-transparent';
 
+  const getFontClass = (font) => {
+        return font ? `font-${font}` : '';
+    };
+
+  useEffect(()=>{
+    if (el.id === selectedId) console.log(el.position)
+  },[textBoxes])
+
   return (
     <Draggable
       nodeRef={nodeRef}
       bounds="parent"
       disabled={textSelectedId === el.id}
-      defaultPosition={{ x: el.position.x, y: el.position.y }}
+      position={{ x: el.position.x, y: el.position.y }}
       onStop={(e, data) =>
         updateTextBox(el.id, {
           position: { x: data.x, y: data.y },
@@ -77,14 +87,15 @@ function TextElement({el, selectedId, setSelectedId, textSelectedId, setTextSele
                 const { offsetWidth, offsetHeight } = ref.current;
                 updateTextBox(el.id, {
                   w: offsetWidth,
-                  h: offsetHeight - 16,
+                  h: offsetHeight,
                 });
               }
             }}
             placeholder="Text..."
-            className={`absolute rounded border-dashed ${borderClass}`}
+            className={` rounded border-dashed ${borderClass} ${getFontClass(formData.style[formData.selectedStyle].font.value)}`}
             style={{
               width: el.w,
+              height: el.h,
               cursor: 'text',
               fontSize: el.textSize,
               fontWeight: el.bold ? 'bold' : 'normal',
@@ -96,8 +107,8 @@ function TextElement({el, selectedId, setSelectedId, textSelectedId, setTextSele
               resize: 'both',
               minHeight: 50,
               minWidth: 100,
-              maxWidth: PAGE_WIDTH - el.position.x - 80,
-              maxHeight: PAGE_HEIGHT - el.position.y - 80,
+              maxWidth: PAGE_WIDTH - el.position.x ,
+              maxHeight: PAGE_HEIGHT - el.position.y ,
               boxSizing: 'border-box',
             }}
           />
@@ -105,12 +116,12 @@ function TextElement({el, selectedId, setSelectedId, textSelectedId, setTextSele
           <div
           onClick={handleSingleClick}
           onDoubleClick={handleDoubleClick}
-          
-          className={`absolute rounded border-dashed ${borderClass}`}
+          ref={ref}
+          className={` rounded border-dashed ${borderClass} ${getFontClass(formData.style[formData.selectedStyle].font.value)}`}
             style={{
-              
-              cursor: selectedId === el.id? "move" : "pointer",
+              cursor: selectedId !== el.id? "move" : "pointer",
               width: el.w,
+              height: el.h,
               minHeight: 50,
               minWidth: 100,
               whiteSpace: 'pre-wrap', // 🔥 Questo è ciò che rende visibili gli \n

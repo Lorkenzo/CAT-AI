@@ -1,11 +1,9 @@
 import { Typography, Autocomplete, TextField } from "@mui/material";
-import { useFormData } from "../../contexts/FormContext";
 
-function GeneralSettings(){
-    const {formData, setFormData} = useFormData()
+function GeneralSettings({newSettings, setNewSettings}){
 
     const handleAutocompleteChange = (name) => (event,value) => {
-        setFormData(prev => ({
+        setNewSettings(prev => ({
             ...prev,
             [name]: value
         }));
@@ -22,7 +20,7 @@ function GeneralSettings(){
                 fullWidth
                 name="exercise_level"
                 disableClearable
-                value={formData.exercise_level}
+                value={newSettings.exercise_level}
                 options={["Easy", "Medium", "Challenge"]} 
                 sx={{ maxWidth: 150 }}
                 onChange={handleAutocompleteChange("exercise_level")}
@@ -40,7 +38,7 @@ function GeneralSettings(){
                 name="n_questions"
                 fullWidth
                 disableClearable
-                value={formData.n_questions}
+                value={newSettings.n_questions}
                 options={["1","2","3","4","5"]} 
                 sx={{ maxWidth: 150 }}
                 onChange={handleAutocompleteChange("n_questions")}
@@ -58,7 +56,7 @@ function GeneralSettings(){
                 fullWidth
                 name="vocabulary"
                 disableClearable
-                value={formData.vocabulary}
+                value={newSettings.vocabulary}
                 options={["Colloquial", "Playful","Formal"]}
                 sx={{ maxWidth: 150 }} 
                 onChange={handleAutocompleteChange("vocabulary")}

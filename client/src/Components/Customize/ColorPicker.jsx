@@ -2,8 +2,11 @@ import React, { useRef } from "react";
 import { Popover, Stack, IconButton } from "@mui/material";
 import CircleIcon from '@mui/icons-material/Circle';
 import PaletteIcon from '@mui/icons-material/Palette';
+import { useFormData } from "../../contexts/FormContext";
 
 const ColorPicker = ({ anchorEl, open, onClose, color, onChange, onColorClick }) => {
+
+  const {formData} = useFormData()
 
   return (
     <Popover
@@ -21,10 +24,12 @@ const ColorPicker = ({ anchorEl, open, onClose, color, onChange, onColorClick })
       }}
     >
       <Stack direction="row" p={1}>
-        <IconButton onClick={()=>onColorClick("#ffffff")} size="small"><CircleIcon fontSize="small" sx={{color: "#ffffff", border: "2px solid #ccc", borderRadius: "50%"}}/></IconButton>
-        <IconButton onClick={()=>onColorClick("#000000")} size="small"><CircleIcon fontSize="small" sx={{color: "#000000", border: "2px solid #ccc", borderRadius: "50%"}}/></IconButton>
-        <IconButton onClick={()=>onColorClick("#2196f3")} size="small"><CircleIcon fontSize="small" sx={{color: "#2196f3", border: "2px solid #ccc", borderRadius: "50%"}}/></IconButton>
-
+        {formData.style[formData.selectedStyle].palette.map((e,i)=>(
+            e !== "" &&
+            <IconButton key={i} onClick={()=>onColorClick(e)} size="small"><CircleIcon fontSize="small" sx={{color: e, border: "2px solid #ccc", borderRadius: "50%"}}/></IconButton>
+        ))
+        }
+    
         {/* Bottone con icona palette */}
         <IconButton>
           <PaletteIcon sx={{

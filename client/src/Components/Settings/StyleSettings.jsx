@@ -1,8 +1,10 @@
 import { Typography, Autocomplete, TextField, Box, Stack, IconButton } from "@mui/material";
-import { useFormData } from "../../contexts/FormContext";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import AddIcon from '@mui/icons-material/Add';
 import CircleIcon from '@mui/icons-material/Circle';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
+import debounce from "lodash.debounce"; 
 
 const fontOptions = [
   { label: "Inter", value: "inter" },
@@ -17,40 +19,88 @@ const fontOptions = [
   { label: "Fira Code", value: "firacode" }
 ];
 
-function StyleSettings(){
-    const {formData, setFormData} = useFormData()
-    const [currentFont, setCurrentFont] = useState(formData.style[formData.selectedStyle].font.value)
+function StyleSettings({newSettings, setNewSettings}){
+    
+    const [currentFont, setCurrentFont] = useState(newSettings.style[newSettings.selectedStyle].font.value)
+    const [cSelected, setCSelected] = useState(null)
+    const [nColor, setNColor] = useState(newSettings.style[newSettings.selectedStyle].palette.filter((e)=>e!=="").length)
     
     const getFontClass = (font) => {
         return font ? `font-${font}` : '';
     };
 
     useEffect(()=>{
-        const fontClass = getFontClass(formData.style[formData.selectedStyle].font.value);
+        const fontClass = getFontClass(newSettings.style[newSettings.selectedStyle].font.value);
         setCurrentFont(fontClass)
-        console.log(fontClass)
-    },[formData.style[formData.selectedStyle].font])
+    },[newSettings.style[newSettings.selectedStyle].font])
+       
+    useEffect(()=>{
+         setNColor(newSettings.style[newSettings.selectedStyle].palette.filter((e)=>e!=="").length)
+    },[newSettings.style[newSettings.selectedStyle].palette])
 
     const handleStyleChange = (name) => (event,value) => {
         
-        setFormData(prev => ({
+        setNewSettings(prev => ({
             ...prev,
             [name]: value
         }));
     };
 
     const handleFontChange = (selectedStyle) => (event, value) => {
-  setFormData(prev => ({
-    ...prev,
-    style: {
-      ...prev.style,
-      [selectedStyle]: {
-        ...prev.style[selectedStyle],
-        font: value
-      }
+        setNewSettings(prev => ({
+            ...prev,
+            style: {
+            ...prev.style,
+            [selectedStyle]: {
+                ...prev.style[selectedStyle],
+                font: value
+            }
+            }
+        }));
+        };
+
+    const debouncedColorChange = useCallback(
+        debounce((selectedStyle, value, setNewSettings, cSelected, nColor) => {
+            const c_i = cSelected === null? nColor : cSelected
+            if (cSelected===null) setCSelected(nColor)
+            setNewSettings(prev => ({
+            ...prev,
+            style: {
+                ...prev.style,
+                [selectedStyle]: {
+                ...prev.style[selectedStyle],
+                palette: prev.style[selectedStyle].palette.map((c, i) =>
+                    i === c_i ? value : c
+                ),
+                },
+            },
+            }));
+        }, 50),
+        []
+        );
+
+    const handleColorChange = (selectedStyle) => (e) =>{
+        const value = e.target.value;
+        debouncedColorChange(selectedStyle, value, setNewSettings, cSelected, nColor);
+
     }
-  }));
-};
+
+    const handleColorDelete = (selectedStyle) =>{
+        setNewSettings(prev => ({
+            ...prev,
+            style: {
+                ...prev.style,
+                [selectedStyle]: {
+                ...prev.style[selectedStyle],
+                palette: prev.style[selectedStyle].palette.map((c, i) =>
+                    i === cSelected ? "" : c
+                ),
+                },
+            },
+            }));
+        setCSelected(null)
+    }
+
     return(
         <div className="flex flex-col">
             <div className="flex flex-row justify-around pt-3">
@@ -62,7 +112,7 @@ function StyleSettings(){
                 fullWidth
                 name="style"
                 disableClearable
-                value={formData.style[formData.selectedStyle].name}
+                value={newSettings.style[newSettings.selectedStyle].name}
                 options={["MyStyle", "Formal", "Playful"]} 
                 sx={{ maxWidth: 150 }}
                 onChange={handleStyleChange("selectedStyle")}
@@ -81,11 +131,11 @@ function StyleSettings(){
                 name="font"
                 fullWidth
                 disableClearable
-                value={formData.style[formData.selectedStyle].font}
+                value={newSettings.style[newSettings.selectedStyle].font}
                 options={fontOptions} 
                 getOptionLabel={(option) => option.label}
                 sx={{ maxWidth: 150 }}
-                onChange={handleFontChange(formData.selectedStyle)}
+                onChange={handleFontChange(newSettings.selectedStyle)}
                 renderOption={(props, option) => {
                     const { key, ...optionProps } = props;
                     return(
@@ -117,21 +167,43 @@ function StyleSettings(){
                 </div>
             </div>
             <div className="flex flex-row justify-around py-3">
-                <div className="flex justify-start w-1/2">
+                <div className="flex justify-start w-1/3">
                 <Typography>Palette</Typography>
                 </div>
 
-                <div className="flex justify-start w-1/2">
-                <IconButton onClick={()=>{}} size="small"><CircleIcon fontSize="small" sx={{color: "#ffffff", border: "2px solid #ccc", borderRadius: "50%"}}/></IconButton>
-                <IconButton onClick={()=>{}} size="small"><CircleIcon fontSize="small" sx={{color: "#000000", border: "2px solid #ccc", borderRadius: "50%"}}/></IconButton>
-                <IconButton onClick={()=>{}} size="small"><CircleIcon fontSize="small" sx={{color: "#2196f3", border: "2px solid #ccc", borderRadius: "50%"}}/></IconButton>
+                <div className="flex justify-end w-2/3 ">
+                <div className="flex items-center overflow-x-auto scrollbar-none">
+                 {
+                    newSettings.style[newSettings.selectedStyle].palette.map((e,i)=>{
+                        const ColorRef = useRef(null)
 
+                        useEffect(() => {
+                        const handleClickOutside = (event) => {
+                            if (ColorRef.current && !ColorRef.current.contains(event.target) && !event.target.closest('[data-ignore-click-outside]')) {
+                            
+                            setCSelected(null)
+                            }
+                        };
+
+                        document.addEventListener('mousedown', handleClickOutside);
+                        return () => document.removeEventListener('mousedown', handleClickOutside);
+                        }, []);
+
+                        return (e !== "" &&
+                        <IconButton ref={ColorRef} key={i} onClick={()=>setCSelected(prev=> prev === i? null: i)} size="small">
+                            <CircleIcon fontSize="small" sx={{color: e, border: cSelected === i? "2px solid #888" : "2px solid #ccc", borderRadius: "50%"}}/>
+                        </IconButton>)
+                        
+                    })
+                 }
+                 </div>
+                
                 {/* Bottone con icona palette */}
-                <IconButton>
-                <AddIcon/>
+                <IconButton data-ignore-click-outside disabled={cSelected===null && nColor>=5}>
+                {cSelected !== null ?<EditIcon/>: <AddIcon/>}
                 <input
                     type="color"
-                    
+                    onInput={handleColorChange(newSettings.selectedStyle)}
                     style={{
                     opacity: 0,
                     position: "absolute",
@@ -143,6 +215,9 @@ function StyleSettings(){
                     }}
                 />
                 </IconButton>
+                {cSelected !== null && <IconButton data-ignore-click-outside onClick={()=>handleColorDelete(newSettings.selectedStyle)} disabled={nColor<=1}>
+                    <DeleteIcon></DeleteIcon>
+                </IconButton>}
 
                 </div>
             </div>

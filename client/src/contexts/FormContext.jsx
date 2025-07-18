@@ -1,44 +1,38 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 
 const FormContext = createContext();
 
 const myStyle = {
     name: "MyStyle",
     font: { label: "Roboto", value: "roboto" },
-    c1: "",
-    c2: "",
-    c3: "",
-    c4: "",
-    c5: ""
+    palette: ["#888", "#000000", "#2196f3", "", ""]
   }
 
 const FormalStyle = {
     name: "Formal",
     font: { label: "Playfair Display", value: "playfair" },
-    c1: "",
-    c2: "",
-    c3: "",
-    c4: "",
-    c5: ""
+    palette: ["#1C1C1E", "#3A3F58", "#D6D6D6", "", ""]
   }
 
 const PlayfulStyle = {
     name: "Playful",
     font: { label: "Poppins", value: "poppins" },
-    c1: "",
-    c2: "",
-    c3: "",
-    c4: "",
-    c5: ""
+    palette: ["#FF6B6B", "#FFD93D", "#6BCB77", "", ""]
   }
 
-export const FormProvider = ({ children }) => {
-  const [formData, setFormData] = useState({
-    fileURL: null,
+const initialFormData = {
+    file: {
+      url: "",
+      name: "",
+      size: "",
+      type: "",
+    },
     exercisetext:"",
     goals:[],
     prerequisites:[],
-    reminder: false,
+    school: "",
+    grade: "",
+    reminder: true,
     example: false,
     exercise_level: "Easy",
     n_questions: "3",
@@ -51,10 +45,45 @@ export const FormProvider = ({ children }) => {
     selectedStyle: "MyStyle",
     confidence: "95",
     dislexiaInclusive: false,
-  });
+  }
 
+const getInitialData = () => {
+  const saved = localStorage.getItem("formData");
+  try {
+    return saved ? JSON.parse(saved) : initialFormData;
+  } catch {
+    return initialFormData;
+  }
+};
+
+export const FormProvider = ({ children }) => {
+  const [formData, setFormData] = useState(getInitialData);
+
+  useEffect(() => {
+      localStorage.setItem("formData", JSON.stringify(formData));
+      }, [formData]);
+
+  const resetFormData = () =>{
+    setFormData(prev => ({
+      ...prev,
+      file: {
+        url: "",
+        name: "",
+        size: "",
+        type: "",
+      },
+      exercisetext:"",
+      goals:[],
+      prerequisites:[],
+      school: "",
+      grade: "",
+      reminder: false,
+      example: false,
+    }))
+  }
+    
   return (
-    <FormContext.Provider value={{ formData, setFormData }}>
+    <FormContext.Provider value={{ formData, setFormData, resetFormData }}>
       {children}
     </FormContext.Provider>
   );

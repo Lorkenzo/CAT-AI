@@ -61,7 +61,7 @@ function ImageElement({ el, selectedId, setSelectedId, imageSelectedId, setImage
       nodeRef={nodeRef}
       bounds="parent"
       disabled={imageSelectedId === el.id}
-      defaultPosition={{ x: el.position.x, y: el.position.y }}
+      position={{ x: el.position.x, y: el.position.y }}
       onStop={(e, data) =>
         updateImage(el.id, {
           position: { x: data.x, y: data.y },
@@ -89,8 +89,8 @@ function ImageElement({ el, selectedId, setSelectedId, imageSelectedId, setImage
             height: el.h,
             minWidth: 50,
             minHeight: 50,
-            maxWidth: PAGE_WIDTH - el.position.x - 80,
-            maxHeight: PAGE_HEIGHT - el.position.y - 80,
+            maxWidth: PAGE_WIDTH - el.position.x,
+            maxHeight: PAGE_HEIGHT - el.position.y,
           }}
         >
           <img

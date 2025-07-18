@@ -7,40 +7,55 @@ import { useState } from "react";
 import { GeneralSettings } from "./GeneralSettings";
 import { StyleSettings } from "./StyleSettings";
 import { AdvancedSettings } from "./AdvancedSettings";
+import { useFormData } from "../../contexts/FormContext";
 
 function Settings({isSettingOpened, setIsSettingOpened}) {
+    const {formData, setFormData} = useFormData()
 
-    const [currentSetting, setCurrentSetting] = useState(0)
+    const [currentSettingPage, setCurrentSettingPage] = useState(0)
+
+    const [newSettings, setNewSettings] = useState(formData)
+    
+    const handleCancel = () =>{
+        setIsSettingOpened(false)
+        setNewSettings(formData)
+    }
+
+    const handleApply = () => {
+        setIsSettingOpened(false)
+        setFormData(newSettings)
+    }
+
     return(
         <Dialog
         open={isSettingOpened}
         >
             <DialogTitle className="flex items-center gap-3"><SettingsSuggestIcon />Generation Settings</DialogTitle>
             <DialogContent sx={{ paddingBottom: 0 }}>
-                <Tabs variant="fullWidth" value={currentSetting}>
-                    <Tab icon={<SettingsIcon/>} iconPosition="start" label="General" onClick={()=>setCurrentSetting(0)}/>
-                    <Tab icon={<PaletteIcon/>} iconPosition="start" label="Style" onClick={()=>setCurrentSetting(1)}/>
-                    <Tab icon={<TuneIcon/>} iconPosition="start" label="Advanced" onClick={()=>setCurrentSetting(2)}/>
+                <Tabs variant="fullWidth" value={currentSettingPage}>
+                    <Tab icon={<SettingsIcon/>} iconPosition="start" label="General" onClick={()=>setCurrentSettingPage(0)}/>
+                    <Tab icon={<PaletteIcon/>} iconPosition="start" label="Style" onClick={()=>setCurrentSettingPage(1)}/>
+                    <Tab icon={<TuneIcon/>} iconPosition="start" label="Advanced" onClick={()=>setCurrentSettingPage(2)}/>
                 </Tabs>
-                <TabPanel index={currentSetting}></TabPanel>
+                <TabPanel index={currentSettingPage} newSettings={newSettings} setNewSettings={setNewSettings}></TabPanel>
                 <DialogActions>
-                    <Button color="primary" variant="outlined" onClick={()=>setIsSettingOpened(false)}>Cancel</Button>
-                    <Button color="primary" variant="contained">Apply</Button>
+                    <Button color="primary" variant="outlined" onClick={handleCancel}>Cancel</Button>
+                    <Button color="primary" variant="contained" onClick={handleApply}>Apply</Button>
                 </DialogActions>
             </DialogContent>
         </Dialog>
     )
 }
 
-function TabPanel({index}){
+function TabPanel({index, newSettings, setNewSettings}){
 
     return(
         index === 0?
-        <GeneralSettings></GeneralSettings>
+        <GeneralSettings newSettings={newSettings} setNewSettings={setNewSettings}></GeneralSettings>
         : index === 1?
-        <StyleSettings></StyleSettings>
+        <StyleSettings newSettings={newSettings} setNewSettings={setNewSettings}></StyleSettings>
         : index === 2?
-        <AdvancedSettings></AdvancedSettings>
+        <AdvancedSettings newSettings={newSettings} setNewSettings={setNewSettings}></AdvancedSettings>
         : <></>
     )
 }

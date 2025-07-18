@@ -3,6 +3,7 @@ import ZoomOutIcon from '@mui/icons-material/ZoomOut';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
+import SwapVertIcon from '@mui/icons-material/SwapVert';
 import UndoIcon from '@mui/icons-material/Undo';
 import RedoIcon from '@mui/icons-material/Redo';
 import { Tooltip, TextField, Button, IconButton } from '@mui/material';
@@ -14,7 +15,7 @@ import API from '../../API/API.mjs';
 import { useExportData } from '../../contexts/ExportData';
 import { useState } from 'react';
 
-function HorizontalToolBar({zoomIn,zoomOut,scale,fullScreen,setFullScreen, setSelectedId, setTextSelectedId, setImageSelectedId, setLoading}){
+function HorizontalToolBar({zoomIn,zoomOut,scale,fullScreen,setFullScreen, setSelectedId, setTextSelectedId, setImageSelectedId, setExporting,exercisePage, handlePageSwitch}){
     const navigate = useNavigate()
     const [title, setTitle] = useState("Exercise")
     const {undo, redo, history, redoStack} = useDocument()
@@ -22,7 +23,11 @@ function HorizontalToolBar({zoomIn,zoomOut,scale,fullScreen,setFullScreen, setSe
 
     const generatePdfFromDocument = async (element, headingHTML, title) => {
 
-        // 🔽 Aggiungi heading temporaneo
+        // Temp No Border
+        const originalBorder = element.style.border;
+        element.style.border = "none";
+
+        // Temp Heading
         const heading = document.createElement('div');
         if (headingHTML !== ""){
         heading.innerHTML = headingHTML;
@@ -43,6 +48,9 @@ function HorizontalToolBar({zoomIn,zoomOut,scale,fullScreen,setFullScreen, setSe
 
         pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
 
+        // Restore Style
+        element.style.border = originalBorder;
+
         if (headingHTML !== ""){
             heading.remove()
         }
@@ -61,7 +69,7 @@ function HorizontalToolBar({zoomIn,zoomOut,scale,fullScreen,setFullScreen, setSe
     };
 
     const headingHTML = `
-        <div style="margin-bottom: 12px; border-bottom: 1px solid #ccc; padding-bottom: 4px;">
+        <div style="border-bottom: 1px solid #ccc; padding: 20px;">
         <div style="display: flex; justify-content: space-between; font-size: 14px;">
             <div><strong>Nome:</strong></div>
             <div><strong>Cognome:</strong></div>
@@ -75,22 +83,25 @@ function HorizontalToolBar({zoomIn,zoomOut,scale,fullScreen,setFullScreen, setSe
         setTextSelectedId(null);
         setImageSelectedId(null);
 
-        const element = document.getElementById('document');
+        const exercise = document.getElementById('document');
+        const answer = document.getElementById('answer');
 
-        setLoading(true)
-
-        const url = await generatePdfFromDocument(element,"","exercise")
-        const urlHeading = await generatePdfFromDocument(element,headingHTML,"heading")
+        setExporting(true)
+        
+        const url = await generatePdfFromDocument(exercise,"","exercise")
+        const urlHeading = await generatePdfFromDocument(exercise,headingHTML,"heading")
+        const urlAnswer = await generatePdfFromDocument(answer,"","answer")
 
         setExportData(prev => ({
             ...prev,
             url,
-            urlHeading
+            urlHeading,
+            urlAnswer,
         }))
 
         setTimeout(()=>{
             navigate("/export")
-            setLoading(false)
+            setExporting(false)
         },[1000])
     }
 
@@ -134,7 +145,8 @@ function HorizontalToolBar({zoomIn,zoomOut,scale,fullScreen,setFullScreen, setSe
             <div className="flex items-center w-1/3" data-ignore-click-outside>
                     <TextField value={title} onChange={(e)=>setTitle(e.target.value)} fullWidth label="Exercise Title" variant="standard"></TextField>
                 </div>
-            <div className="flex items-center " data-ignore-click-outside>
+            <div className="flex items-center gap-3" data-ignore-click-outside>
+                <Button onClick={handlePageSwitch} variant="outlined" endIcon={<SwapVertIcon className={`${exercisePage === 1 && "-scale-x-[1]"}`}></SwapVertIcon>}>{exercisePage===1?"Solution":"Exercise"}</Button>
                 <Button onClick={handleExport} variant="contained" endIcon={<NavigateNextIcon></NavigateNextIcon>}>Export</Button>
             </div>
         </div>

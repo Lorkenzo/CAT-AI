@@ -8,6 +8,7 @@ import TextDecreaseIcon from '@mui/icons-material/TextDecrease';
 import FormatUnderlinedIcon from '@mui/icons-material/FormatUnderlined'
 import FormatColorTextIcon from '@mui/icons-material/FormatColorText';
 import { useDocument } from "../../contexts/CustomizeContext";
+import { useFormData } from '../../contexts/FormContext';
 import AutoModeIcon from '@mui/icons-material/AutoMode';
 import GeneratingTokensIcon from '@mui/icons-material/GeneratingTokens';
 import { useState, useEffect, useRef } from "react";
@@ -15,18 +16,21 @@ import { Stack, ToggleButton, ToggleButtonGroup, Tooltip, Box, TextField, Popove
 import { ColorPicker } from './ColorPicker';
 import API from '../../API/API.mjs';
 
-function VerticalToolbar({selectedId, setSelectedId, textSelectedId, setTextSelectedId, imageSelectedId,  setImageSelectedId}) {
+function VerticalToolbar({exercisePage, selectedId, setSelectedId, textSelectedId, setTextSelectedId, imageSelectedId,  setImageSelectedId, setLoading}) {
+    const {textBoxes, images, updateTextBox, setTextBoxes, deleteTextBox, addTextBox, updateImage, deleteImage, addImage} = useDocument()
+    const {formData} = useFormData()
     const [textFormat, setTextFormat] = useState([]);
-    const {textBoxes, images, updateTextBox, deleteTextBox, addTextBox, updateImage, deleteImage, addImage} = useDocument()
     const [increseEnabled, setIncreaseEnabled] = useState(true)
     const [decreseEnabled, setDecreaseEnabled] = useState(true)
     const [regenOpen, setRegenOpen] = useState(null); 
     const [anchorEl, setAnchorEl] = useState(null);  
-    const [uploading, setUploading] = useState(false);
     const imageInputRef = useRef(null);
+    
 
     const isText = textBoxes.some(el => el.id === selectedId);
     const isImage = images.some(img => img.id === selectedId);
+
+    //------REGENERATION --------------
 
     const handleRegenToggle = (event, newValue) => {
     if (regenOpen === newValue) {
@@ -42,6 +46,27 @@ function VerticalToolbar({selectedId, setSelectedId, textSelectedId, setTextSele
         setRegenOpen(null);
         setAnchorEl(null);
     };
+
+    const handleRegeneration = async (prompt) =>{
+        try{
+            setLoading(true)
+            setRegenOpen(null)
+        
+            if (regenOpen === "full") {
+                const res = await API.handleExerciseGeneration(formData,prompt)
+                setTextBoxes(res)
+            }
+            if (regenOpen ==="element") {
+                
+            }
+        }
+        catch(err){
+            console.log(err)
+        }
+        finally{
+            setLoading(false)
+        }
+    }
     //-----ADD IMAGE -----------
 
     const handleImage = async (selectedImage) =>{
@@ -50,15 +75,12 @@ function VerticalToolbar({selectedId, setSelectedId, textSelectedId, setTextSele
     data.append('file', selectedImage);
 
     try {
-      setUploading(true);
       const file = await API.handleUploadFile(data); // chiamata fetch
-      addImage(file.url)
+      addImage(file.url, exercisePage)
       
     } catch (err) {
         console.log(err);
-    } finally {
-      setUploading(false);
-    }
+    } 
     }
 
     const handleFileSelect = async (event) => {
@@ -165,7 +187,8 @@ function VerticalToolbar({selectedId, setSelectedId, textSelectedId, setTextSele
             width: 64,
             display:"flex",
             alignItems: 'center',
-            py:1
+            py:1,
+            zIndex: 20
         }}>
             <ToggleButtonGroup
             orientation="vertical"
@@ -194,11 +217,12 @@ function VerticalToolbar({selectedId, setSelectedId, textSelectedId, setTextSele
             open={Boolean(regenOpen)}
             onClose={handlePopoverClose}
             mode={regenOpen}
+            handleRegeneration={handleRegeneration}
             />
 
             <ToggleButtonGroup orientation="vertical">
                 <Tooltip title="Add Text" placement="right">
-                    <ToggleButton value="text" onClick={addTextBox} data-ignore-click-outside>
+                    <ToggleButton value="text" onClick={()=>addTextBox(exercisePage)} data-ignore-click-outside>
                     <TextFieldsIcon />
                     </ToggleButton>
                 </Tooltip>
@@ -281,8 +305,6 @@ const TextColorButton = ({ selectedId, isText }) => {
   const [isOpen, setIsOpen] = useState(null);
   const [currentColor, setCurrentColor] = useState("#000000")
 
-  const buttonColor = textBoxes.find(e => e.id === selectedId)?.textColor
-
   const handleOpen = (event) => {
     setIsOpen(event.currentTarget);
   };
@@ -305,6 +327,11 @@ const TextColorButton = ({ selectedId, isText }) => {
     setCurrentColor(color)
   }
 
+  useEffect(()=>{
+    const buttonColor = textBoxes.find(e => e.id === selectedId)?.textColor
+    setCurrentColor(buttonColor)
+  },[selectedId])
+
   return (
     <>
       <Tooltip title="Change Text Color" placement="right">
@@ -314,7 +341,7 @@ const TextColorButton = ({ selectedId, isText }) => {
             disabled={!isText}
             onClick={handleOpen}
             sx={{
-                color: Boolean(isOpen)? currentColor: isText? buttonColor : ""
+                color: currentColor
             }}
           >
             <FormatColorTextIcon />
@@ -326,7 +353,7 @@ const TextColorButton = ({ selectedId, isText }) => {
         anchorEl={isOpen}
         open={Boolean(isOpen)}
         onClose={handleClose}
-        color={buttonColor}
+        color={currentColor}
         onChange={handleColorChange}
         onColorClick={onColorClick}
       />
@@ -334,8 +361,9 @@ const TextColorButton = ({ selectedId, isText }) => {
   );
 };
 
-function RegenPopover({anchorEl,open, onClose, mode}){
+function RegenPopover({anchorEl,open, onClose, mode, handleRegeneration}){
     const [regenMode, setRegenMode] = useState(null)
+    const [regenPrompt, setRegenPrompt] = useState("")
 
     useEffect(()=>{
         if (mode==="full") setRegenMode("Exercise")
@@ -348,7 +376,7 @@ function RegenPopover({anchorEl,open, onClose, mode}){
         data-ignore-click-outside
         open = {open}
         anchorEl={anchorEl}
-        onClose={onClose}
+        onClose={()=>{onClose(); setRegenPrompt("")}}
         anchorOrigin={{
             vertical: 'top',
             horizontal: 'left',
@@ -369,9 +397,12 @@ function RegenPopover({anchorEl,open, onClose, mode}){
                     {regenMode==="Exercise"?<AutoModeIcon fontSize="small" className="mr-2 align-middle"/>:<GeneratingTokensIcon fontSize="small" className="mr-2 align-middle"></GeneratingTokensIcon>}
                     <Typography variant="body1">Regenerate {regenMode}</Typography>
                 </div>
-                <TextField multiline minRows={4} maxRows={4} variant="outlined" color="primary" placeholder="I would like..." helperText="Specify what you would like to change" 
+                <TextField onChange={(e)=>setRegenPrompt(e.target.value)} value={regenPrompt} multiline minRows={4} maxRows={4} variant="outlined" color="primary" placeholder="I would like..." helperText="Specify what you would like to change" 
                 ></TextField>
-                <Button variant="contained">Regenerate</Button>
+                <Button disabled={regenPrompt===""} variant="contained" onClick={()=>{
+                    handleRegeneration(regenPrompt);
+                    setRegenPrompt("");}}
+                    >Regenerate</Button>
 
             </Stack>
             </Box>

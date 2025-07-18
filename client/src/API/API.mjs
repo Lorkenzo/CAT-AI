@@ -69,13 +69,71 @@ const handleTextExtraction = async (path) => {
     return res;
 }
 
+const handleTextAnalysis = async (text) => {
+  try {
+    const response = await fetch(`${SERVER_URL}/api/generate/exercise-info`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        text 
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error('Errore:', data.errore);
+      return { errore: data.errore };
+    }
+
+    console.log('Risultato:', data);
+    return data;
+
+  } catch (error) {
+    console.error('Errore di rete:', error);
+    return { errore: 'Errore di rete o server non disponibile' };
+  }
+};
+
+const handleExerciseGeneration = async (formdata, text = "") => {
+  try {
+    const response = await fetch(`${SERVER_URL}/api/generate/exercise`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        data: formdata,
+        text
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error('Errore:', data.errore);
+      return { errore: data.errore };
+    }
+
+    console.log('Risultato:', data);
+    return data;
+
+  } catch (error) {
+    console.error('Errore di rete:', error);
+    return { errore: 'Errore di rete o server non disponibile' };
+  }
+};
 
 
 const API = {
   handleUploadFile,
   handleDownloadFile,
   handleDeleteFile,
-  handleTextExtraction
+  handleTextExtraction,
+  handleTextAnalysis,
+  handleExerciseGeneration
 }
 
 export default API

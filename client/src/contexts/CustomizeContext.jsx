@@ -48,6 +48,7 @@ export const DocumentProvider = ({ children }) => {
     setHistory((prev) => prev.slice(0, -1));
     setRedoStack((prev) => [...prev, { textBoxes, images }]);
     setTextBoxes(prevState.textBoxes);
+    console.log(prevState.textBoxes)
     setImages(prevState.images);
   };
 
@@ -61,14 +62,16 @@ export const DocumentProvider = ({ children }) => {
   };
 
   // ───────────── TEXT BOX ─────────────
-  const addTextBox = () => {
+  const addTextBox = (page) => {
     let newY = 16;
-    if (textBoxes.length >= 1) {
-      const prevTextBox = [...textBoxes].sort((a, b) => b.position.y - a.position.y)[0];
+    if (textBoxes.filter(e => e.page === page).length >= 1) {
+      const prevTextBox = [...textBoxes].filter(e => e.page === page).sort((a, b) => b.position.y - a.position.y)[0];
       newY = prevTextBox.position.y + prevTextBox.h + 16;
     }
+
     const newTextBox = {
       id: Date.now(),
+      page,
       position: { x: 16, y: newY },
       w: 200,
       h: 50,
@@ -91,6 +94,7 @@ export const DocumentProvider = ({ children }) => {
     const isSame = last && JSON.stringify(last.textBoxes) === JSON.stringify(updated);
 
     if (!isSame) {
+      console.log(updated)
       saveToHistory(updated, images);
     }
     setTextBoxes(updated)
@@ -103,9 +107,10 @@ export const DocumentProvider = ({ children }) => {
   };
 
   // ───────────── IMAGES ─────────────
-  const addImage = (url) => {
+  const addImage = (url,page) => {
     const newImage = {
       id: Date.now(),
+      page,
       url,
       position: { x: 16, y: 16 },
       w: 200,
@@ -138,7 +143,9 @@ export const DocumentProvider = ({ children }) => {
         history,
         redoStack,
         textBoxes,
+        setTextBoxes,
         images,
+        setImages,
         addTextBox,
         updateTextBox,
         deleteTextBox,

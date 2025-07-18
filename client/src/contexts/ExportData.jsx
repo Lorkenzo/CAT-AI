@@ -2,15 +2,18 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 
 const ExportContext = createContext();
 
+const initialExportData = {
+      url : null,
+      urlHeading: null,
+      urlAnswer: null,
+    }
+
 const getInitialData = () => {
   const saved = localStorage.getItem("exportData");
   try {
-    return saved ? JSON.parse(saved) : [];
+    return saved ? JSON.parse(saved) : initialExportData;
   } catch {
-    return {
-      url : null,
-      urlHeading: null
-    };
+    return initialExportData;
   }
 };
 

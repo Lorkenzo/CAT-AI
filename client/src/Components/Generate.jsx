@@ -2,18 +2,34 @@ import { useEffect, useState } from "react"
 import { Header } from "./Header"
 import { FileUploader } from "./Uploader"
 import Edit from "@mui/icons-material/Edit"
-import { Button, Divider, IconButton, Typography, TextField, Autocomplete, Chip,FormControl, FormGroup, FormControlLabel, FormHelperText, Checkbox } from "@mui/material"
+import { Button, Divider, IconButton, Typography, TextField, Autocomplete, Chip,FormControl, FormGroup, FormControlLabel, FormHelperText, Checkbox, LinearProgress } from "@mui/material"
 import UploadFileImg from "../assets/uploadfile.png"
 import FillManuallyImg from "../assets/fillmanually.png"
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import { Routes, Route, Outlet, useNavigate } from "react-router-dom";
 import { useFormData } from "../contexts/FormContext"
+import API from "../API/API.mjs"
+import { useDocument } from "../contexts/CustomizeContext"
+import { Loading } from "./Loading"
 
 function Generate(){
-    const [file, setFile] = useState(null);
+    const { formData, resetFormData } = useFormData();
+    const { setTextBoxes} = useDocument()
+    const [generating, setGenerating] = useState(false)
+
     const navigate = useNavigate()
 
-    const handleSubmit = () =>{
+    const handleSubmit = async () =>{
+        //resetFormData()
+        try{
+            setGenerating(true)
+            const res = await API.handleExerciseGeneration(formData)
+            setTextBoxes(res)
+        }
+        catch(err){
+            console.log(err)
+        }
+        setGenerating(false)
         navigate("/customize")
     }
 
@@ -33,11 +49,11 @@ function Generate(){
             } />
 
             <Route path="/upload" element={
-            <UploadMode file={file} setFile={setFile} handleSubmit={handleSubmit}></UploadMode>
+            <UploadMode handleSubmit={handleSubmit} generating={generating}></UploadMode>
             } />
 
             <Route path="/manual" element={
-            <ManualMode handleSubmit={handleSubmit}></ManualMode>
+            <ManualMode handleSubmit={handleSubmit} generating={generating}></ManualMode>
             }/>
             
         </Route>
@@ -95,27 +111,32 @@ function ModeButtons(){
     )
 }
 
-function UploadMode({file, setFile, handleSubmit}){
+function UploadMode({handleSubmit, generating}){
+    const [uploading, setUploading] = useState(false);
+    const { formData, setFormData } = useFormData();
 
     return(
-        <>
-        <FileUploader file={file} setFile={setFile}></FileUploader>
-        {file && <GenerationForm></GenerationForm>}
-        <div className="flex items-end justify-end w-full h-[15%]">
-            <Button onClick={handleSubmit} size="medium" variant="contained" endIcon={<NavigateNextIcon/>} disabled={!file}>Generate</Button>
+        <div className="flex flex-col w-full h-full">
+        <FileUploader setUploading={setUploading}></FileUploader>
+        {uploading? 
+        <Loading text={"Extracting informations"}></Loading>
+        : generating? <Loading text={"Generating exercise"}></Loading>
+        : formData.file.url? <GenerationForm></GenerationForm> : null}
+        <div className="flex items-end justify-end w-full h-[10%]">
+            <Button onClick={handleSubmit} size="medium" variant="contained" endIcon={<NavigateNextIcon/>} disabled={!formData.file.url || uploading || generating}>Generate</Button>
         </div>
-        </>
+        </div>
     )
 }
 
-function ManualMode({handleSubmit}){
+function ManualMode({handleSubmit, generating}){
     return(
-        <>
-        <GenerationForm></GenerationForm>
-        <div className="flex items-center justify-end w-full h-[15%]">
-            <Button onClick={handleSubmit} size="medium" variant="contained" endIcon={<NavigateNextIcon/>}>Generate</Button>
+        <div className="flex flex-col w-full h-full">
+        {generating? <Loading text={"Generating exercise"}></Loading> : <GenerationForm></GenerationForm>}
+        <div className="flex items-center justify-end w-full h-[10%]">
+            <Button onClick={handleSubmit} size="medium" variant="contained" endIcon={<NavigateNextIcon/>} disabled={generating}>Generate</Button>
         </div>
-        </>
+        </div>
     )
 }
 
@@ -137,6 +158,19 @@ function GenerationForm(){
         }));
     };
 
+    const handleSchoolChange = (name) => (event, value) => {
+        setFormData(prev => prev.grade !== ""?  ({
+            ...prev,
+            [name]: value,
+            grade: ""
+        })
+        : ({
+            ...prev,
+            [name]: value
+        })
+    );
+    };
+
     const handleCheckboxChange = (e) => {
         setFormData(prev => ({
             ...prev,
@@ -144,21 +178,49 @@ function GenerationForm(){
         }));
     };
 
-    useEffect(()=>{
-        console.log(formData)
-    },[])
-
     return(
-        <div className="flex flex-row w-full h-2/3 mt-2">
+        <div className="flex flex-row w-full h-[80%] mt-2">
             <div className="flex flex-col w-1/2 h-full mr-6">
                 <Typography variant="subtitle1" className="mb-1">Exercise Text</Typography>
-                <TextField multiline label="Text" rows={11} className="w-full" 
+                <TextField multiline label="Text" rows={14} className="w-full" 
                 name="exercisetext" 
                 onChange={handleTextChange} 
                 value={formData.exercisetext || ""}>
                 </TextField>
             </div>
             <div className="flex flex-col w-1/2 h-full ml-6">
+                <div className="flex flex-col mb-2">
+                <Typography variant="subtitle1" className="mb-1">School Level</Typography>
+                <div className="flex flex-row w-full justify-between">
+                    <div className="flex w-[60%]">
+                    <Autocomplete
+                    fullWidth
+                    name="school"
+                    onChange={handleSchoolChange("school")}
+                    value={formData.school}
+                    options={["elementary","middle"]}
+                    
+                    renderInput={(params) => (
+                        <TextField {...params} variant="outlined" label="Insert" placeholder="school"/>
+                    )}></Autocomplete>
+                    </div>
+                    <div className="flex w-[30%]">
+                    <Autocomplete
+                    fullWidth
+                    disabled={formData.school===""}
+                    name="school"
+                    onChange={handleAutocompleteChange("grade")}
+                    value={formData.grade}
+                    options={formData.school==="elementary"?
+                        ["1","2","3","4","5"]:["1","2","3"]
+                    }
+                    
+                    renderInput={(params) => (
+                        <TextField {...params} variant="outlined" label="Insert" placeholder="grade"/>
+                    )}></Autocomplete>
+                    </div>
+                </div>
+                </div>
                 <div className="flex flex-col mb-2">
                 <Typography variant="subtitle1" className="mb-1">Learning Goals</Typography>
                 <Autocomplete multiple freeSolo

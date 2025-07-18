@@ -1,11 +1,9 @@
 import { Typography, Autocomplete, TextField, InputAdornment, Switch, Box } from "@mui/material";
-import { useFormData } from "../../contexts/FormContext";
 
-function AdvancedSettings(){
-    const {formData, setFormData} = useFormData()
+function AdvancedSettings({newSettings, setNewSettings}){
 
     const handleAutocompleteChange = (name) => (event,value) => {
-        setFormData(prev => ({
+        setNewSettings(prev => ({
             ...prev,
             [name]: value
         }));
@@ -22,7 +20,7 @@ function AdvancedSettings(){
                 fullWidth
                 name="confidence"
                 disableClearable
-                value={formData.confidence}
+                value={newSettings.confidence}
                 options={["95","99"]} 
                 sx={{ maxWidth: 150 }}
                 onChange={handleAutocompleteChange("confidence")}
@@ -49,9 +47,9 @@ function AdvancedSettings(){
                 </div>
                 <div className="flex justify-start w-1/2">
                     <Switch
-                        checked={formData.dislexiaInclusive}
+                        checked={newSettings.dislexiaInclusive}
                         onChange={(e) =>
-                        setFormData((prev) => ({
+                        setNewSettings((prev) => ({
                             ...prev,
                             dislexiaInclusive: e.target.checked,
                         }))

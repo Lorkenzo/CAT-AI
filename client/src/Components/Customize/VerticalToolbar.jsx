@@ -7,6 +7,8 @@ import TextIncreaseIcon from '@mui/icons-material/TextIncrease';
 import TextDecreaseIcon from '@mui/icons-material/TextDecrease';
 import FormatUnderlinedIcon from '@mui/icons-material/FormatUnderlined'
 import FormatColorTextIcon from '@mui/icons-material/FormatColorText';
+import UploadIcon from '@mui/icons-material/Upload';
+import PhotoFilterIcon from '@mui/icons-material/PhotoFilter';
 import { useDocument } from "../../contexts/CustomizeContext";
 import { useFormData } from '../../contexts/FormContext';
 import AutoModeIcon from '@mui/icons-material/AutoMode';
@@ -26,6 +28,7 @@ function VerticalToolbar({exercisePage, selectedId, setSelectedId, textSelectedI
     const [anchorEl, setAnchorEl] = useState(null);  
     const imageInputRef = useRef(null);
     
+    const [imageAnchor, setImageAnchor] = useState(null)
 
     const isText = textBoxes.some(el => el.id === selectedId);
     const isImage = images.some(img => img.id === selectedId);
@@ -53,11 +56,12 @@ function VerticalToolbar({exercisePage, selectedId, setSelectedId, textSelectedI
             setRegenOpen(null)
         
             if (regenOpen === "full") {
-                const res = await API.handleExerciseGeneration(formData,prompt)
+                const res = await API.handleExerciseRegeneration(textBoxes,prompt)
                 setTextBoxes(res)
             }
             if (regenOpen ==="element") {
-                
+                const res = await API.handleElementRegeneration(textBoxes,selectedId,prompt)
+                updateTextBox(selectedId,res)
             }
         }
         catch(err){
@@ -68,6 +72,28 @@ function VerticalToolbar({exercisePage, selectedId, setSelectedId, textSelectedI
         }
     }
     //-----ADD IMAGE -----------
+
+    const handleImageOpen = (event) =>{
+        setImageAnchor(event.currentTarget)
+    }
+
+    const handleImageClose = () =>{
+        setImageAnchor(null)
+    }
+
+    const handleImageGeneration = async (prompt) =>{
+        try{
+            setLoading(true)
+            const url = await API.handleImageGeneration(prompt,formData.style[formData.selectedStyle]?.palette.filter(Boolean))
+            console.log(url)
+            addImage(url, exercisePage)
+        }catch(err){
+            console.log(err)
+        }
+        finally{
+            setLoading(false)
+        }
+    }
 
     const handleImage = async (selectedImage) =>{
         if (!selectedImage) return;
@@ -205,7 +231,7 @@ function VerticalToolbar({exercisePage, selectedId, setSelectedId, textSelectedI
 
                 <Tooltip title="Regenerate Element" placement="right">
                     <div data-ignore-click-outside>
-                    <ToggleButton value="element" disabled={selectedId === null}>
+                    <ToggleButton value="element" disabled={!isText}>
                     <GeneratingTokensIcon />
                     </ToggleButton>
                     </div>
@@ -228,7 +254,7 @@ function VerticalToolbar({exercisePage, selectedId, setSelectedId, textSelectedI
                 </Tooltip>
 
                 <Tooltip title="Add Image" placement="right">
-                    <ToggleButton value="image" onClick={()=>imageInputRef.current.click()} data-ignore-click-outside>
+                    <ToggleButton value="image" onClick={handleImageOpen} data-ignore-click-outside>
                     <AddPhotoAlternateIcon />
                     <input
                         type="file"
@@ -239,6 +265,14 @@ function VerticalToolbar({exercisePage, selectedId, setSelectedId, textSelectedI
                     />
                     </ToggleButton>
                 </Tooltip>
+
+                <ImagePopover 
+                open={Boolean(imageAnchor)}
+                anchorEl={imageAnchor}
+                onClose={handleImageClose}
+                imageInputRef={imageInputRef}
+                handleImageGeneration={handleImageGeneration}>
+                </ImagePopover>
 
                 <Tooltip title="Delete" placement="right">
                     <div data-ignore-click-outside>
@@ -360,6 +394,55 @@ const TextColorButton = ({ selectedId, isText }) => {
     </>
   );
 };
+
+function ImagePopover({anchorEl,open, onClose, imageInputRef, handleImageGeneration}){
+    const [generateImage, setGenerateImage] = useState(false)
+    const [imagePrompt, setImagePrompt] = useState("")
+
+    return(
+      <Popover 
+        data-ignore-click-outside
+        open={open}
+        anchorEl={anchorEl}
+        onClose={onClose}
+        anchorOrigin={{
+            vertical: 'top',
+            horizontal: 'left',
+        }}
+        transformOrigin={{
+            vertical: 'top',
+            horizontal: 'right',
+        }}
+        >   
+            {generateImage? 
+            <Box sx={{
+                width: 300,
+                height:280,
+                p:2,
+                backgroundColor: "#efefef",
+                
+            }}>
+            <Stack direction="column" spacing={2}>
+                <div className="flex flex-row justify-start items-center">
+                    <PhotoFilterIcon fontSize="small" className="mr-2 align-middle"></PhotoFilterIcon>
+                    <Typography variant="body1">Generate Image</Typography>
+                </div>
+                <TextField onChange={(e)=>setImagePrompt(e.target.value)} value={imagePrompt} multiline minRows={4} maxRows={4} variant="outlined" color="primary" placeholder="A dog..." helperText="Specify image features" 
+                ></TextField>
+                <Button disabled={imagePrompt===""} variant="contained" onClick={()=>{
+                    handleImageGeneration(imagePrompt);
+                    setImagePrompt("");}}
+                    >Generate</Button>
+
+            </Stack>
+            </Box> :
+            <div className='flex flex-col p-1'>
+            <Button color='inherit' variant='contained' endIcon={<UploadIcon></UploadIcon>} onClick={()=>imageInputRef.current.click()}>Upload</Button>
+            <Button color='primary' variant='contained' endIcon={<PhotoFilterIcon></PhotoFilterIcon>} onClick={()=>setGenerateImage(true)}>Generate</Button>
+            </div>}
+        </Popover>
+    )
+}
 
 function RegenPopover({anchorEl,open, onClose, mode, handleRegeneration}){
     const [regenMode, setRegenMode] = useState(null)

@@ -97,7 +97,7 @@ const handleTextAnalysis = async (text) => {
   }
 };
 
-const handleExerciseGeneration = async (formdata, text = "") => {
+const handleExerciseGeneration = async (formdata) => {
   try {
     const response = await fetch(`${SERVER_URL}/api/generate/exercise`, {
       method: 'POST',
@@ -105,8 +105,36 @@ const handleExerciseGeneration = async (formdata, text = "") => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ 
-        data: formdata,
-        text
+        data: formdata
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error('Errore:', data.errore);
+      return { errore: data.errore };
+    }
+
+    console.log('Risultato:', data);
+    return data;
+
+  } catch (error) {
+    console.error('Errore di rete:', error);
+    return { errore: 'Errore di rete o server non disponibile' };
+  }
+};
+
+const handleImageGeneration = async (text, palette) => {
+  try {
+    const response = await fetch(`${SERVER_URL}/api/generate/image`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        text,
+        palette
       }),
     });
 
@@ -127,13 +155,75 @@ const handleExerciseGeneration = async (formdata, text = "") => {
 };
 
 
+const handleExerciseRegeneration = async (textBoxes, text) => {
+  try {
+    const response = await fetch(`${SERVER_URL}/api/generate/exercise-again`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        textBoxes,
+        text
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error('Errore:', data.errore);
+      return { errore: data.errore };
+    }
+
+    console.log('Risultato:', data);
+    return data;
+
+  } catch (error) {
+    console.error('Errore di rete:', error);
+    return { errore: 'Errore di rete o server non disponibile' };
+  }
+};
+
+const handleElementRegeneration = async (textBoxes, selectedId, text) => {
+  try {
+    const response = await fetch(`${SERVER_URL}/api/generate/element-again`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        textBoxes,
+        selectedId,
+        text
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error('Errore:', data.errore);
+      return { errore: data.errore };
+    }
+
+    console.log('Risultato:', data);
+    return data;
+
+  } catch (error) {
+    console.error('Errore di rete:', error);
+    return { errore: 'Errore di rete o server non disponibile' };
+  }
+};
+
 const API = {
   handleUploadFile,
   handleDownloadFile,
   handleDeleteFile,
   handleTextExtraction,
   handleTextAnalysis,
-  handleExerciseGeneration
+  handleExerciseGeneration,
+  handleExerciseRegeneration,
+  handleElementRegeneration,
+  handleImageGeneration
 }
 
 export default API

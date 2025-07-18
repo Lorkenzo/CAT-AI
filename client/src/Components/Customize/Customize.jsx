@@ -11,7 +11,7 @@ const PAGE_WIDTH = 794;
 const PAGE_HEIGHT = 1123;
 
 function Customize({fullScreen, setFullScreen}) {
-    const {textBoxes,images,addTextBox,updateTextBox,deleteTextBox,addImage,updateImage,deleteImage} = useDocument()
+    const {textBoxes,images,deleteTextBox,deleteImage, undo, redo} = useDocument()
 
     const wrapperRef = useRef(null);
     const exerciseRef = useRef(null)
@@ -34,20 +34,24 @@ function Customize({fullScreen, setFullScreen}) {
 
     useEffect(() => {
     const handleKeyDown = (e) => {
-      if ((e.key === "Delete" || e.key === "Backspace") && selectedId && !textSelectedId) {
+      if ((e.key === "Delete") && selectedId && !textSelectedId) {
         // Verifica se l'id selezionato è una textbox o un'immagine
         const isText = textBoxes.some(el => el.id === selectedId);
         const isImage = images.some(img => img.id === selectedId);
-
         if (isText) deleteTextBox(selectedId);
         else if (isImage) {
-
             deleteImage(selectedId);
         }
 
         setSelectedId(null);
         setTextSelectedId(null);
       }
+
+      else if (e.ctrlKey && e.key === 'z') {
+        undo();
+      } else if (e.ctrlKey && (e.key === 'y' || (e.shiftKey && e.key === 'z'))) {
+        redo();
+        }
     };
 
     window.addEventListener("keydown", handleKeyDown);
@@ -93,6 +97,10 @@ function Customize({fullScreen, setFullScreen}) {
         }
         setExercisePage(prev => prev === 1? 2 : 1)
     }
+
+    useEffect(()=>{
+        console.log(images)
+    },[])
 
     return (
         <div className="flex flex-col w-full h-[140%] items-center">

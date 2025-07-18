@@ -22,51 +22,67 @@ function HorizontalToolBar({zoomIn,zoomOut,scale,fullScreen,setFullScreen, setSe
     const {exportData, setExportData} = useExportData()
 
     const generatePdfFromDocument = async (element, headingHTML, title) => {
+    const originalBorder = element.style.border;
+    element.style.border = "none";
 
-        // Temp No Border
-        const originalBorder = element.style.border;
-        element.style.border = "none";
-
-        // Temp Heading
-        const heading = document.createElement('div');
-        if (headingHTML !== ""){
+    const heading = document.createElement('div');
+    if (headingHTML !== "") {
         heading.innerHTML = headingHTML;
         element.insertBefore(heading, element.firstChild);
-        }
+    }
 
-        const canvas = await html2canvas(element, {
-            scale: 2,
-            useCORS: true,
-        });
+    const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+    });
 
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF({
-            orientation: 'portrait',
-            unit: 'px',
-            format: [canvas.width, canvas.height],
-        });
+    const imgData = canvas.toDataURL('image/png');
 
-        pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+    // Formato A4 in punti jsPDF (unità default: mm, px o pt)
+    const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+    });
 
-        // Restore Style
-        element.style.border = originalBorder;
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
 
-        if (headingHTML !== ""){
-            heading.remove()
-        }
+    // Dimensioni dell'immagine in pixel
+    const imgWidthPx = canvas.width;
+    const imgHeightPx = canvas.height;
 
-        const blob = pdf.output('blob');
-        const formData = new FormData();
-        formData.append('file', blob, `document_${title}.pdf`);
+    // Converti pixel in mm assumendo 96 DPI come riferimento (1 pollice = 25.4 mm)
+    const pxPerMm = 96 / 25.4;
+    const imgWidthMm = imgWidthPx / pxPerMm;
+    const imgHeightMm = imgHeightPx / pxPerMm;
 
-        try {
-            const response = await API.handleUploadFile(formData);
-            console.log('PDF salvato su:', response.url);
-            return response.url;
-        } catch (error) {
-            console.error('Errore durante upload PDF:', error);
-        }
-    };
+    // Scala per adattare proporzionalmente all'interno di A4
+    const ratio = Math.min(pageWidth / imgWidthMm, pageHeight / imgHeightMm);
+
+    const imgScaledWidth = imgWidthMm * ratio;
+    const imgScaledHeight = imgHeightMm * ratio;
+
+    const marginX = (pageWidth - imgScaledWidth) / 2;
+    const marginY = (pageHeight - imgScaledHeight) / 2;
+
+    pdf.addImage(imgData, 'PNG', marginX, marginY, imgScaledWidth, imgScaledHeight);
+
+    element.style.border = originalBorder;
+    if (headingHTML !== "") heading.remove();
+
+    const blob = pdf.output('blob');
+    const formData = new FormData();
+    formData.append('file', blob, `document_${title}.pdf`);
+
+    try {
+        const response = await API.handleUploadFile(formData);
+        console.log('PDF salvato su:', response.url);
+        return response.url;
+    } catch (error) {
+        console.error('Errore durante upload PDF:', error);
+    }
+};
 
     const headingHTML = `
         <div style="border-bottom: 1px solid #ccc; padding: 20px;">

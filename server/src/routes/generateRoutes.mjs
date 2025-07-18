@@ -1,7 +1,7 @@
 import express from "express"
 import { OpenAI } from "openai"
 import dotenv from "dotenv"
-import { generatePrompt, cleanJSON } from "../utils.mjs";
+import { generatePrompt, regenerateElementPrompt, regenerateAllPrompt, generateImagePrompt, cleanJSON } from "../utils.mjs";
 
 const generateRoutes = express.Router();
 
@@ -57,10 +57,10 @@ generateRoutes.post('/exercise-info', async (req, res) => {
 });
 
 generateRoutes.post('/exercise', async (req, res) => {
-  const { data, text } = req.body;
+  const { data } = req.body;
 
   try {
-    const prompt = generatePrompt(data, text);
+    const prompt = generatePrompt(data);
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [{ role: 'user', content: prompt }],
@@ -72,6 +72,66 @@ generateRoutes.post('/exercise', async (req, res) => {
   } catch (error) {
     console.error('Errore:', error);
     res.status(500).json({ error: 'Errore durante la generazione.' });
+  }
+});
+
+generateRoutes.post('/exercise-again', async (req, res) => {
+  const { textBoxes, text } = req.body;
+
+  try {
+    const prompt = regenerateAllPrompt(textBoxes,text);
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.4,
+    });
+
+    const result = JSON.parse(cleanJSON(completion.choices[0].message.content));
+    res.json(result);
+  } catch (error) {
+    console.error('Errore:', error);
+    res.status(500).json({ error: 'Errore durante la generazione.' });
+  }
+});
+
+generateRoutes.post('/element-again', async (req, res) => {
+  const { textBoxes,  selectedId, text } = req.body;
+
+  try {
+    const prompt = regenerateElementPrompt(textBoxes,selectedId,text);
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.4,
+    });
+
+    const result = JSON.parse(cleanJSON(completion.choices[0].message.content));
+    res.json(result);
+  } catch (error) {
+    console.error('Errore:', error);
+    res.status(500).json({ error: 'Errore durante la generazione.' });
+  }
+});
+
+generateRoutes.post('/image', async (req, res) => {
+  const { text, palette } = req.body;
+
+  try {
+    const prompt = generateImagePrompt(text, palette);
+
+    const response = await openai.images.generate({
+      model: 'dall-e-2',
+      prompt: prompt,
+      size: "256x256",
+      response_format: "url",
+    });
+
+    const result = response.data[0].url
+    res.json(result)
+
+  } catch (error) {
+    console.error('Errore:', error);
+    res.status(500).json({ error: 'Errore durante la generazione dell\'immagine.' });
   }
 });
 

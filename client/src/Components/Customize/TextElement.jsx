@@ -110,6 +110,7 @@ function TextElement({el, selectedId, setSelectedId, textSelectedId, setTextSele
               maxWidth: PAGE_WIDTH - el.position.x ,
               maxHeight: PAGE_HEIGHT - el.position.y ,
               boxSizing: 'border-box',
+              zIndex: 200
             }}
           />
         ) : (

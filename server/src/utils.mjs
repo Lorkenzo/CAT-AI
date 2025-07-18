@@ -1,5 +1,5 @@
 // utils/generatePrompt.js
-function generatePrompt(formData, text) {
+function generatePrompt(formData) {
   
   const {
     exercisetext,
@@ -22,8 +22,6 @@ function generatePrompt(formData, text) {
     ? "Use font size between 18-24, increase spacing, and keep layout simple and accessible."
     : "";
   
-  const additionalWarning = text? `The generated exercise must follow this specification: ${text}` : ""
-
   const formattedGoals = goals.join(", ") || "Not specified";
   const formattedPre = prerequisites.join(", ") || "Not specified";
 
@@ -41,8 +39,7 @@ function generatePrompt(formData, text) {
 
     Be aware:
     - The exercise must be inspired by the original text, but it must NOT copy its content. 
-    - You can use the same terminology or exercise type of the exercise text
-    ${additionalWarning}
+    - You can use the same terminology or typology of the given exercise text
 
     Style guide:
     - Use the following color palette for text color selection: ${palette.join(", ")}.
@@ -78,6 +75,108 @@ function generatePrompt(formData, text) {
     `;
 }
 
+function regenerateElementPrompt(allTextBoxes, targetId, userInstruction) {
+
+  return `
+    You are a pedagogical assistant. You are working with a JSON-based editable layout system for educational exercises.
+
+    Each block of the exercise is represented as a TextBox object with this structure:
+
+    {
+      "id": unique number (timestamp),
+      "page": 1 (exercise) or 2 (solution),
+      "position": { "x": <number>, "y": <number> }, 
+      "w": <width>, 
+      "h": <height>,
+      "content": "<text content>", 
+      "textSize": <font size between 12 and 24>,
+      "textColor": "<color from other boxes palette or #000000>",
+      "bold": true|false,
+      "italic": true|false,
+      "underlined": true|false
+    }
+
+    You will receive:
+    1. The full current list of TextBox blocks
+    2. The ID of the block to regenerate
+    3. A user instruction describing what should be changed
+
+    Your task:
+    - Return ONLY a new version of that specific TextBox, using the same ID and other formatting properties (unless the instruction says to change them)
+    - Update the "content" field according to the instruction
+    - You can consider the context (surrounding TextBoxes) to improve clarity or coherence
+    - Preserve the language used in the other boxes
+
+    Here is the list of current TextBoxes:
+
+    ${JSON.stringify(allTextBoxes, null, 2)}
+
+    Block ID to regenerate: ${targetId}
+
+    User instruction: "${userInstruction}"
+
+    Respond with only the updated TextBox as JSON, no markdown or extra text.
+    `;
+}
+
+function regenerateAllPrompt(allTextBoxes, userInstruction) {
+
+  return `
+    You are a pedagogical assistant. You are working with a JSON-based editable layout system for educational exercises.
+
+    Each block of the exercise is represented as a TextBox object with this structure:
+
+    {
+      "id": unique number (timestamp),
+      "page": 1 (exercise) or 2 (solution),
+      "position": { "x": <number>, "y": <number> }, 
+      "w": <width>, 
+      "h": <height>,
+      "content": "<text content>", 
+      "textSize": <font size between 12 and 24>,
+      "textColor": "<color from other boxes palette or #000000>",
+      "bold": true|false,
+      "italic": true|false,
+      "underlined": true|false
+    }
+
+    You will receive:
+    1. The full current list of TextBox blocks
+    3. A user instruction describing what should be changed
+
+    Your task:
+    - Return the full updated JSON with the changes according to the instructions, mantaining the same ID for each object
+    - You can change every other object field in order to accomplish the instruction
+    - Maintain clarity and coherence with respect to the original one
+    - Preserve the language used in the text boxes
+    - Change the solution text boxes content in order to fit and be coherent with the exercise changes, if any.
+
+    Here is the list of current TextBoxes:
+
+    ${JSON.stringify(allTextBoxes, null, 2)}
+
+    User instruction: "${userInstruction}"
+
+    Respond with only the updated TextBox as JSON, no markdown or extra text.
+    `;
+}
+
+function generateImagePrompt(instruction, palette){
+  const formattedPalette = palette.filter(Boolean).join(", ");
+  return `
+  Create an educational illustration suitable for a primary or middle school exercise sheet.
+
+  Instructional theme: ${instruction}.
+
+  Design style: clean and simple, with visual clarity, friendly shapes, and no clutter.
+
+  Use the following color palette as visual reference:
+  Primary colors: ${formattedPalette}.
+
+  Avoid photo-realism. Make the illustration child-friendly and visually coherent with the specified colors.
+  Do not include text in the image. The layout should leave space around the subject so it can be embedded in an exercise layout.`;
+}
+
 function cleanJSON(rawText){
   return rawText
     .replace(/^```json\s*/i, '')  // rimuove ```json all'inizio
@@ -86,4 +185,4 @@ function cleanJSON(rawText){
     .trim();
 };
 
-export {generatePrompt, cleanJSON}
+export {generatePrompt, generateImagePrompt, regenerateElementPrompt, regenerateAllPrompt, cleanJSON}

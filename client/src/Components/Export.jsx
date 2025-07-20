@@ -43,7 +43,7 @@ const Export = () => {
         const pdf = await loadingTask.promise;
         const page = await pdf.getPage(1);
 
-        const viewport = page.getViewport({ scale: 2 });
+        const viewport = page.getViewport({ scale: 2, rotation: 0 });
         const canvas = canvasRef.current;
         const context = canvas.getContext('2d');
 
@@ -103,7 +103,7 @@ const Export = () => {
                 ref={canvasRef}
                 style={{ border: '1px solid #ccc',
                     width: "auto",
-                    height: "95%",
+                    maxHeight: "95%",
                     display: 'block',
                 }}
             />) : <CircularProgress></CircularProgress>}

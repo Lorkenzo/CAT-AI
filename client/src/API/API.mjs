@@ -145,7 +145,6 @@ const handleImageGeneration = async (text, palette) => {
       return { errore: data.errore };
     }
 
-    console.log('Risultato:', data);
     return data;
 
   } catch (error) {

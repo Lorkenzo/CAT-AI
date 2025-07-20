@@ -84,9 +84,9 @@ function VerticalToolbar({exercisePage, selectedId, setSelectedId, textSelectedI
     const handleImageGeneration = async (prompt) =>{
         try{
             setLoading(true)
-            const url = await API.handleImageGeneration(prompt,formData.style[formData.selectedStyle]?.palette.filter(Boolean))
-            console.log(url)
-            addImage(url, exercisePage)
+            const res = await API.handleImageGeneration(prompt,formData.style[formData.selectedStyle]?.palette.filter(Boolean))
+            console.log(res)
+            addImage(res.url, exercisePage)
         }catch(err){
             console.log(err)
         }
@@ -431,7 +431,8 @@ function ImagePopover({anchorEl,open, onClose, imageInputRef, handleImageGenerat
                 ></TextField>
                 <Button disabled={imagePrompt===""} variant="contained" onClick={()=>{
                     handleImageGeneration(imagePrompt);
-                    setImagePrompt("");}}
+                    setImagePrompt("");
+                    setGenerateImage(false)}}
                     >Generate</Button>
 
             </Stack>

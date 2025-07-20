@@ -2,6 +2,12 @@ import express from "express"
 import { OpenAI } from "openai"
 import dotenv from "dotenv"
 import { generatePrompt, regenerateElementPrompt, regenerateAllPrompt, generateImagePrompt, cleanJSON } from "../utils.mjs";
+import { pipeline } from "stream";
+import { promisify } from "util";
+import path from "path"
+import fs from "fs"
+
+const PORT = 3001
 
 const generateRoutes = express.Router();
 
@@ -10,6 +16,8 @@ dotenv.config();
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
+
+const streamPipeline = promisify(pipeline);
 
 generateRoutes.post('/exercise-info', async (req, res) => {
   const { text } = req.body;
@@ -121,17 +129,29 @@ generateRoutes.post('/image', async (req, res) => {
 
     const response = await openai.images.generate({
       model: 'dall-e-2',
-      prompt: prompt,
+      prompt: text,
       size: "256x256",
       response_format: "url",
     });
 
-    const result = response.data[0].url
-    res.json(result)
+    const imageUrl = response.data[0].url;
+    const fetchResponse = await fetch(imageUrl);
 
+    if (!fetchResponse.ok) {
+      throw new Error(`Errore durante il download: ${fetchResponse.statusText}`);
+    }
+
+    const ext = '.png';
+    const fileName = `generated-${Date.now()}${ext}`;
+    const savePath = path.join('uploads', fileName);
+    const fileUrl = `http://localhost:${PORT}/uploads/${fileName}`;
+
+    await streamPipeline(fetchResponse.body, fs.createWriteStream(savePath));
+
+    res.json({ url: fileUrl });
   } catch (error) {
     console.error('Errore:', error);
-    res.status(500).json({ error: 'Errore durante la generazione dell\'immagine.' });
+    res.status(500).json({ error: 'Errore durante la generazione o il salvataggio dell\'immagine.' });
   }
 });
 

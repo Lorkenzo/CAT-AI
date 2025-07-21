@@ -124,7 +124,7 @@ function FileUploader({setUploading}) {
         }
         </Avatar>
         <Box sx={{ flexGrow: 1 }}>
-        <Typography variant="body1">{formData.file.name}</Typography>
+        <Typography variant="body1" className='line-clamp-1'>{formData.file.name}</Typography>
         <Typography variant="caption" color="text.secondary">
             {formatFileSize(formData.file.size)} • Upload complete
         </Typography>

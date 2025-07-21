@@ -71,7 +71,7 @@ function VerticalToolbar({exercisePage, selectedId, setSelectedId, textSelectedI
             setLoading(false)
         }
     }
-    //-----ADD IMAGE -----------
+    //-----HANDLE IMAGE -----------
 
     const handleImageOpen = (event) =>{
         setImageAnchor(event.currentTarget)
@@ -86,7 +86,8 @@ function VerticalToolbar({exercisePage, selectedId, setSelectedId, textSelectedI
             setLoading(true)
             const res = await API.handleImageGeneration(prompt,formData.style[formData.selectedStyle]?.palette.filter(Boolean))
             console.log(res)
-            addImage(res.url, exercisePage)
+            const newid = addImage(res.url, exercisePage)
+            setSelectedId(newid)
         }catch(err){
             console.log(err)
         }
@@ -102,8 +103,8 @@ function VerticalToolbar({exercisePage, selectedId, setSelectedId, textSelectedI
 
     try {
       const file = await API.handleUploadFile(data); // chiamata fetch
-      addImage(file.url, exercisePage)
-      
+      const newid = addImage(file.url, exercisePage)
+      setSelectedId(newid)
     } catch (err) {
         console.log(err);
     } 
@@ -178,7 +179,13 @@ function VerticalToolbar({exercisePage, selectedId, setSelectedId, textSelectedI
         }
     }
 
-    //----TEXT CHANGE--------
+    //----HANDLE TEXT--------
+
+    const handleText = () =>{
+        const newid = addTextBox(exercisePage)
+        console.log(newid)
+        setSelectedId(newid)
+    }
 
     const handleTextFormat = (event, newFormats) => {
         setTextFormat(newFormats);
@@ -218,20 +225,51 @@ function VerticalToolbar({exercisePage, selectedId, setSelectedId, textSelectedI
         }}>
             <ToggleButtonGroup
             orientation="vertical"
-            color="primary"
             exclusive
             value={regenOpen}
             onChange={handleRegenToggle}
             >
                 <Tooltip title="Generate Again" placement="right">
-                    <ToggleButton data-ignore-click-outside value="full">
+                    <ToggleButton data-ignore-click-outside value="full" sx={{
+                        color: 'white',
+                        backgroundImage: 'linear-gradient(135deg, #ff69b4, #8a2be2)',
+                        backgroundSize: '100% 100%',
+                        transition: 'background-image 0.3s ease',
+                        '&:hover': {
+                        backgroundImage: 'linear-gradient(135deg, #ff4fa3, #6c22cc)', // hover più scuro
+                        },
+                        '&.Mui-selected': {
+                        backgroundImage: 'linear-gradient(135deg, #ff85c1, #a366f5)', // selected più chiaro
+                        color: 'white',
+                        '&:hover': {
+                            backgroundImage: 'linear-gradient(135deg, #ff69b4, #8a2be2)',
+                        },
+                        },
+                    }}
+                    >
                     <AutoModeIcon />
                     </ToggleButton>
                 </Tooltip>
 
                 <Tooltip title="Regenerate Element" placement="right">
                     <div data-ignore-click-outside>
-                    <ToggleButton value="element" disabled={!isText}>
+                    <ToggleButton value="element" disabled={!isText} sx={{
+                        color: 'white',
+                        backgroundImage: 'linear-gradient(135deg, #ff69b4, #8a2be2)',
+                        backgroundSize: '100% 100%',
+                        transition: 'background-image 0.3s ease',
+                        '&:hover': {
+                        backgroundImage: 'linear-gradient(135deg, #ff4fa3, #6c22cc)', // hover più scuro
+                        },
+                        '&.Mui-selected': {
+                        backgroundImage: 'linear-gradient(135deg, #ff85c1, #a366f5)', // selected più chiaro
+                        color: 'white',
+                        '&:hover': {
+                            backgroundImage: 'linear-gradient(135deg, #ff69b4, #8a2be2)',
+                        },
+                        },
+                    }}
+                    >
                     <GeneratingTokensIcon />
                     </ToggleButton>
                     </div>
@@ -248,7 +286,7 @@ function VerticalToolbar({exercisePage, selectedId, setSelectedId, textSelectedI
 
             <ToggleButtonGroup orientation="vertical">
                 <Tooltip title="Add Text" placement="right">
-                    <ToggleButton value="text" onClick={()=>addTextBox(exercisePage)} data-ignore-click-outside>
+                    <ToggleButton value="text" onClick={()=>handleText()} data-ignore-click-outside>
                     <TextFieldsIcon />
                     </ToggleButton>
                 </Tooltip>
@@ -283,6 +321,7 @@ function VerticalToolbar({exercisePage, selectedId, setSelectedId, textSelectedI
                 </Tooltip>
             </ToggleButtonGroup>
 
+             {isText &&
             <ToggleButtonGroup orientation="vertical">
                 <Tooltip title="Decrease Text Size" placement="right">
                     <div data-ignore-click-outside>
@@ -302,7 +341,8 @@ function VerticalToolbar({exercisePage, selectedId, setSelectedId, textSelectedI
 
                 <TextColorButton selectedId={selectedId} isText={isText}></TextColorButton>
             </ToggleButtonGroup>
-
+            }
+            {isText &&
             <ToggleButtonGroup orientation="vertical"
             value={isText? textFormat: []} 
             onChange={handleTextFormat}>
@@ -330,6 +370,7 @@ function VerticalToolbar({exercisePage, selectedId, setSelectedId, textSelectedI
                     </div>
                 </Tooltip>
             </ToggleButtonGroup>
+        }
         </Stack>
     );
 }
@@ -437,9 +478,29 @@ function ImagePopover({anchorEl,open, onClose, imageInputRef, handleImageGenerat
 
             </Stack>
             </Box> :
-            <div className='flex flex-col p-1'>
-            <Button color='inherit' variant='contained' endIcon={<UploadIcon></UploadIcon>} onClick={()=>imageInputRef.current.click()}>Upload</Button>
-            <Button color='primary' variant='contained' endIcon={<PhotoFilterIcon></PhotoFilterIcon>} onClick={()=>setGenerateImage(true)}>Generate</Button>
+            <div className='flex flex-col p-1 gap-1'>
+            <Button color='inherit' variant='contained' endIcon={<UploadIcon></UploadIcon>} onClick={()=>imageInputRef.current.click()} sx={{'&:hover': {transform: 'scale(1.02)',
+                }}}>Upload</Button>
+            <Button
+            endIcon={<PhotoFilterIcon />}
+            onClick={() => setGenerateImage(true)}
+            sx={{
+                color: 'white',
+                backgroundImage: 'linear-gradient(135deg, #ff69b4, #8a2be2)',
+                backgroundSize: '100% 100%',
+                transition: 'background-image 0.3s ease, transform 0.2s ease',
+                '&:hover': {
+                backgroundImage: 'linear-gradient(135deg, #ff4fa3, #6c22cc)',
+                transform: 'scale(1.02)',
+                },
+                '&:active': {
+                backgroundImage: 'linear-gradient(135deg, #ff85c1, #a366f5)',
+                transform: 'scale(0.98)',
+                },
+            }}
+            >
+            Generate
+            </Button>
             </div>}
         </Popover>
     )

@@ -31,9 +31,6 @@ const Export = () => {
     setTimeout(()=>{},[1000])
     return
   }
-  else{
-    setLoading(false)
-  }
 
   const renderPDF = async (url) => {
         let renderTask = null;
@@ -42,9 +39,11 @@ const Export = () => {
         const loadingTask = getDocument(url);
         const pdf = await loadingTask.promise;
         const page = await pdf.getPage(1);
-
-        const viewport = page.getViewport({ scale: 2, rotation: 0 });
+        
+        const viewport = page.getViewport({ scale: 2, rotation: 0});
+        
         const canvas = canvasRef.current;
+
         const context = canvas.getContext('2d');
 
         canvas.height = viewport.height;
@@ -59,13 +58,19 @@ const Export = () => {
         renderTask = page.render(renderContext);
         await renderTask.promise;
         } catch (error) {
-            console.log("preview rendered")
+            console.log("Already rendered");
         }
     };
-    const url = getUrl()
 
-    renderPDF(url);
-    }, [exerciseType,exportData]);
+  
+    setLoading(true);
+    const url = getUrl();
+    requestAnimationFrame(async () => {
+      await renderPDF(url);
+      setLoading(false);
+    });
+
+    }, [exerciseType, canvasRef.current]);
 
     
     const handleDownloadFile = () => {
@@ -77,7 +82,7 @@ const Export = () => {
   return (
     <div className="flex flex-col w-full h-[120%] items-center">
       <Header stepnumber={2} />
-      <div className="flex flex-row justify-between w-[80%] my-2">
+      <div className="flex flex-row justify-between w-[80%] my-2 max-md:w-full">
         <div className="flex flex-row items-center w-[50%] gap-3">
         <Chip color="primary" variant="outlined" size="large" icon={<FileCopyIcon />} label="Format" />
         <Autocomplete 
@@ -97,8 +102,8 @@ const Export = () => {
         </div>
       </div>
       
-        <div className="flex justify-center items-center relative w-[80%] h-full overflow-auto bg-gray-100">
-            {!loading ? (
+        <div className="flex justify-center items-center relative w-[80%] h-full overflow-auto bg-gray-100 max-md:w-full">
+            
             <canvas
                 ref={canvasRef}
                 style={{ border: '1px solid #ccc',
@@ -106,7 +111,7 @@ const Export = () => {
                     maxHeight: "95%",
                     display: 'block',
                 }}
-            />) : <CircularProgress></CircularProgress>}
+            />
         </div>
     </div>
   );

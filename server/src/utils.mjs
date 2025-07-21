@@ -44,7 +44,7 @@ function generatePrompt(formData) {
     Style guide:
     - Use the following color palette for text color selection: ${palette.join(", ")}.
     - The language of the output must always match the language of the input text. For example, if the input is in Italian, the entire output (title, instructions, questions, etc.) must also be in Italian.
-    ${reminder ? "- Include a useful reminder or note at the end of the exercise." : ""}
+    ${reminder ? "- Include a useful reminder or note at the end of the exercise concerning the pre-prequisites." : ""}
     ${example ? "- Include a worked-out example before the actual questions." : ""}
     ${dislexia}
 

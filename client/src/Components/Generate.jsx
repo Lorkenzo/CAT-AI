@@ -2,7 +2,8 @@ import { useEffect, useState } from "react"
 import { Header } from "./Header"
 import { FileUploader } from "./Uploader"
 import Edit from "@mui/icons-material/Edit"
-import { Button, Divider, IconButton, Typography, TextField, Autocomplete, Chip,FormControl, FormGroup, FormControlLabel, FormHelperText, Checkbox, LinearProgress } from "@mui/material"
+import InfoOutlineIcon from '@mui/icons-material/InfoOutline';
+import { Button, Divider, IconButton, Typography, TextField, Autocomplete, Chip,FormControl, FormGroup, FormControlLabel, FormHelperText, Checkbox, LinearProgress, Tooltip } from "@mui/material"
 import UploadFileImg from "../assets/uploadfile.png"
 import FillManuallyImg from "../assets/fillmanually.png"
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
@@ -17,10 +18,46 @@ function Generate(){
     const { setTextBoxes} = useDocument()
     const [generating, setGenerating] = useState(false)
 
+    const initialFieldError = {
+        exercisetext: false,
+        goals:false,
+        prerequisites:false,
+        school:false,
+        grade:false
+    }
+
+    const [fieldError, setFieldError] = useState(initialFieldError) 
+
     const navigate = useNavigate()
 
+    const checkErrorInputParams = () => {
+        const newErrors = {
+            exercisetext: !Boolean(formData.exercisetext),
+            goals: !Boolean(formData.goals.length),
+            prerequisites: !Boolean(formData.prerequisites.length),
+            school: !Boolean(formData.school),
+            grade: !Boolean(formData.grade)
+        };
+
+        setFieldError(newErrors);
+
+        const values = Object.values(newErrors);
+        const hasTrue = values.includes(true);
+
+        return hasTrue;
+    };
+
     const handleSubmit = async () =>{
+
+        if (checkErrorInputParams()) {
+            setTimeout(()=>{
+                setFieldError(initialFieldError)
+            },[4000])
+            return
+        }
+        
         //resetFormData()
+
         try{
             setGenerating(true)
             const res = await API.handleExerciseGeneration(formData)
@@ -49,11 +86,11 @@ function Generate(){
             } />
 
             <Route path="/upload" element={
-            <UploadMode handleSubmit={handleSubmit} generating={generating}></UploadMode>
+            <UploadMode handleSubmit={handleSubmit} generating={generating} fieldError={fieldError}></UploadMode>
             } />
 
             <Route path="/manual" element={
-            <ManualMode handleSubmit={handleSubmit} generating={generating}></ManualMode>
+            <ManualMode handleSubmit={handleSubmit} generating={generating} fieldError={fieldError}></ManualMode>
             }/>
             
         </Route>
@@ -73,7 +110,7 @@ function ModeButtons(){
                         <div className="flex w-1/3 h-full justify-center items-center max-md:w-full">
                             <img src={UploadFileImg} className="max-w-[80%]"></img>
                         </div>
-                        <div className="flex flex-col w-2/3 h-full items-start place-content-center max-md:w-full">
+                        <div className="flex flex-col w-2/3 h-full items-start place-content-center max-md:w-full max-md:items-center">
                             <Typography variant="h6" className="mb-2 font-black">
                                 UPLOAD A FILE
                             </Typography>
@@ -93,7 +130,7 @@ function ModeButtons(){
                         <div className="flex w-1/3 h-full justify-center items-center max-md:w-full">
                             <img src={FillManuallyImg} className="max-w-[80%]"></img>
                         </div>
-                        <div className="flex flex-col w-2/3 h-full items-start place-content-center max-md:w-full">
+                        <div className="flex flex-col w-2/3 h-full items-start place-content-center max-md:w-full max-md:items-center">
                             <Typography variant="h6" className="mb-2 font-black">
                                 COMPILE MANUALLY                                   
                             </Typography>
@@ -111,36 +148,42 @@ function ModeButtons(){
     )
 }
 
-function UploadMode({handleSubmit, generating}){
+function UploadMode({handleSubmit, generating, fieldError}){
     const [uploading, setUploading] = useState(false);
     const { formData, setFormData } = useFormData();
 
     return(
-        <div className="flex flex-col w-full h-full">
+        <div className="flex flex-col w-full">
+        <div>
         <FileUploader setUploading={setUploading}></FileUploader>
+        </div>
+        <div>
         {uploading? 
         <Loading text={"Extracting informations"}></Loading>
         : generating? <Loading text={"Generating exercise"}></Loading>
-        : formData.file.url? <GenerationForm></GenerationForm> : null}
-        <div className="flex items-end justify-end w-full h-[10%]">
+        : formData.file.url? <GenerationForm fieldError={fieldError}></GenerationForm> : null}
+        </div>
+        <div className="flex items-end justify-end w-full pb-4">
             <Button onClick={handleSubmit} size="medium" variant="contained" endIcon={<NavigateNextIcon/>} disabled={!formData.file.url || uploading || generating}>Generate</Button>
         </div>
         </div>
     )
 }
 
-function ManualMode({handleSubmit, generating}){
+function ManualMode({handleSubmit, generating, fieldError}){
     return(
-        <div className="flex flex-col w-full h-full">
-        {generating? <Loading text={"Generating exercise"}></Loading> : <GenerationForm></GenerationForm>}
-        <div className="flex items-center justify-end w-full h-[10%]">
+        <div className="flex flex-col w-full">
+        <div>
+        {generating? <Loading text={"Generating exercise"}></Loading> : <GenerationForm fieldError={fieldError}></GenerationForm>}
+        </div>
+        <div className="flex items-center justify-end w-full pb-4">
             <Button onClick={handleSubmit} size="medium" variant="contained" endIcon={<NavigateNextIcon/>} disabled={generating}>Generate</Button>
         </div>
         </div>
     )
 }
 
-function GenerationForm(){
+function GenerationForm({fieldError}){
 
     const { formData, setFormData } = useFormData();
 
@@ -178,21 +221,38 @@ function GenerationForm(){
         }));
     };
 
+    useEffect(()=>{
+        console.log(fieldError)
+    },[fieldError])
+
     return(
-        <div className="flex flex-row w-full h-[80%] mt-2">
-            <div className="flex flex-col w-1/2 h-full mr-6">
-                <Typography variant="subtitle1" className="mb-1">Exercise Text</Typography>
+        <div className="flex flex-col w-full h-[80%] mt-2 md:flex-row">
+            <div className="flex flex-col w-1/2 h-full mr-6 max-md:w-full max-md:pb-2">
+                <div className="flex flex-row items-center gap-1 mb-1">
+                    <Typography variant="subtitle1" className="font-semibold">Exercise Text</Typography>
+                    <Tooltip title="The exercise text to take inspiration from" placement="right">
+                        <InfoOutlineIcon fontSize="small"></InfoOutlineIcon>
+                    </Tooltip>
+                    </div>
                 <TextField multiline label="Text" rows={14} className="w-full" 
+                error={fieldError.exercisetext}
                 name="exercisetext" 
                 onChange={handleTextChange} 
-                value={formData.exercisetext || ""}>
+                value={formData.exercisetext || ""}
+                helperText={fieldError.exercisetext && "Mandatory field"}>
                 </TextField>
             </div>
-            <div className="flex flex-col w-1/2 h-full ml-6">
+            <div className="flex flex-col w-1/2 h-full ml-6 max-md:ml-0 max-md:w-full">
                 <div className="flex flex-col mb-2">
-                <Typography variant="subtitle1" className="mb-1">School Level</Typography>
+                
                 <div className="flex flex-row w-full justify-between">
-                    <div className="flex w-[60%]">
+                    <div className="flex flex-col w-[60%]">
+                    <div className="flex flex-row items-center gap-1 mb-1">
+                    <Typography variant="subtitle1" className="font-semibold">School</Typography>
+                    <Tooltip title="The target school for the exercise" placement="right">
+                        <InfoOutlineIcon fontSize="small"></InfoOutlineIcon>
+                    </Tooltip>
+                    </div>
                     <Autocomplete
                     fullWidth
                     name="school"
@@ -201,10 +261,21 @@ function GenerationForm(){
                     options={["elementary","middle"]}
                     
                     renderInput={(params) => (
-                        <TextField {...params} variant="outlined" label="Insert" placeholder="school"/>
+                        <TextField {...params} 
+                        variant="outlined" 
+                        label="Insert" 
+                        placeholder="school" 
+                        error={fieldError.school} 
+                        helperText={fieldError.school && "Mandatory field"}/>
                     )}></Autocomplete>
                     </div>
-                    <div className="flex w-[30%]">
+                    <div className="flex-col w-[30%]">
+                    <div className="flex flex-row items-center gap-1 mb-1">
+                    <Typography variant="subtitle1" className="font-semibold">Grade</Typography>
+                    <Tooltip title="School grade: 1-5 for elementary 1-3 for middle" placement="right">
+                        <InfoOutlineIcon fontSize="small"></InfoOutlineIcon>
+                    </Tooltip>
+                    </div>
                     <Autocomplete
                     fullWidth
                     disabled={formData.school===""}
@@ -216,13 +287,23 @@ function GenerationForm(){
                     }
                     
                     renderInput={(params) => (
-                        <TextField {...params} variant="outlined" label="Insert" placeholder="grade"/>
+                        <TextField {...params} 
+                        variant="outlined" 
+                        label="Insert" 
+                        placeholder="grade" 
+                        error={fieldError.grade}
+                        helperText={fieldError.grade && "Mandatory field"}/>
                     )}></Autocomplete>
                     </div>
                 </div>
                 </div>
                 <div className="flex flex-col mb-2">
-                <Typography variant="subtitle1" className="mb-1">Learning Goals</Typography>
+                <div className="flex flex-row items-center gap-1 mb-1">
+                    <Typography variant="subtitle1" className="font-semibold">Learning-Goals</Typography>
+                    <Tooltip title="What the student is expected to learn from the new exercise" placement="right">
+                        <InfoOutlineIcon fontSize="small"></InfoOutlineIcon>
+                    </Tooltip>
+                </div>
                 <Autocomplete multiple freeSolo
                 name="goals"
                 onChange={handleAutocompleteChange("goals")}
@@ -237,11 +318,21 @@ function GenerationForm(){
                     })
                     } 
                 renderInput={(params) => (
-                    <TextField {...params} variant="outlined" label="Insert" placeholder="goal"/>
+                    <TextField {...params} 
+                    variant="outlined" 
+                    label="Insert" 
+                    placeholder="goal" 
+                    error={fieldError.goals}
+                    helperText={fieldError.goals && "Mandatory field"}/>
                 )}></Autocomplete>
                 </div>
                 <div className="flex flex-col mb-2">
-                <Typography variant="subtitle1" className="mb-1">Pre-Requisite</Typography>
+                <div className="flex flex-row items-center gap-1 mb-1">
+                    <Typography variant="subtitle1" className="font-semibold">Pre-Requisites</Typography>
+                    <Tooltip title="Skills or knowledge needed to do the new exercise" placement="right">
+                        <InfoOutlineIcon fontSize="small"></InfoOutlineIcon>
+                    </Tooltip>
+                </div>
                 <Autocomplete multiple freeSolo
                 name="prerequisites"
                 onChange={handleAutocompleteChange("prerequisites")}
@@ -256,12 +347,21 @@ function GenerationForm(){
                     })
                     } 
                 renderInput={(params) => (
-                    <TextField {...params} variant="outlined" label="Insert" placeholder="pre-requisite"/>
+                    <TextField {...params} 
+                    variant="outlined" 
+                    label="Insert" 
+                    placeholder="pre-requisite" 
+                    error={fieldError.prerequisites}
+                    helperText={fieldError.prerequisites && "Mandatory field"}/>
                 )}></Autocomplete>
                 </div>
                 <div className="flex flex-col">
-                <Typography variant="subtitle1" className="mb-1">Features</Typography>
-                
+                <div className="flex flex-row items-center gap-1 mb-1">
+                    <Typography variant="subtitle1" className="font-semibold">Features</Typography>
+                    <Tooltip title="Choose to add a reminder concerning the pre-requites or a worked exercise example to help students" placement="right">
+                        <InfoOutlineIcon fontSize="small"></InfoOutlineIcon>
+                    </Tooltip>
+                </div>
                 <FormGroup>
                     <FormControlLabel control={<Checkbox checked={formData.reminder} onChange={handleCheckboxChange} name="reminder"/>} label="Reminder"></FormControlLabel>
                     <FormControlLabel control={<Checkbox checked={formData.example} onChange={handleCheckboxChange} name="example"/>} label="Worked Example"></FormControlLabel>

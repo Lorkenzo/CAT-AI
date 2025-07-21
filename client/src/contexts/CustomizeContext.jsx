@@ -64,15 +64,17 @@ export const DocumentProvider = ({ children }) => {
   // ───────────── TEXT BOX ─────────────
   const addTextBox = (page) => {
     let newY = 16;
+    let newX = 16
     if (textBoxes.filter(e => e.page === page).length >= 1) {
       const prevTextBox = [...textBoxes].filter(e => e.page === page).sort((a, b) => b.position.y - a.position.y)[0];
       newY = prevTextBox.position.y + prevTextBox.h + 16;
+      newX = prevTextBox.position.x
     }
 
     const newTextBox = {
       id: Date.now(),
       page,
-      position: { x: 16, y: newY },
+      position: { x: newX || 16, y: newY || 16 },
       w: 200,
       h: 50,
       content: '',
@@ -83,6 +85,7 @@ export const DocumentProvider = ({ children }) => {
       underlined: false,
     };
     saveToHistory([...textBoxes, newTextBox], images);
+    return newTextBox.id;
   };
 
   const updateTextBox = (id, updates) => {
@@ -117,6 +120,7 @@ export const DocumentProvider = ({ children }) => {
       h: 200,
     };
     saveToHistory(textBoxes, [...images, newImage]);
+    return newImage.id;
   };
 
   const updateImage = (id, updates) => {

@@ -29,8 +29,8 @@ generateRoutes.post('/exercise-info', async (req, res) => {
 
     {
     "text": "...",                         // the full original exercise text
-    "prerequisites": [ "...", "..." ],     // list of skills or knowledge needed to complete the exercise (max 5 words for each prerequisites)
-    "learning_objectives": [ "...", "..." ], // what students are expected to learn (max 5 words for each learning_objectives)
+    "prerequisites": [ "...", "..." ],     // list of pre-skills or prior knowledge needed to do the exercise (max 5 words for each)
+    "learning_objectives": [ "...", "..." ], // what students are expected to learn, the step next to the prerequisites (max 5 words for each)
     "school_level": "elementary" | "middle",
     "grade": 1-5 (for elementary) or 1-3 (for middle school) //string
     }

@@ -216,12 +216,13 @@ function VerticalToolbar({exercisePage, selectedId, setSelectedId, textSelectedI
     },[selectedId, textBoxes])
 
     return (
-        <Stack direction="column" spacing={1} sx={{
-            width: 64,
+        <Stack direction="column"
+        className='sticky w-16 top-12 self-start max-md:w-14'
+        spacing={1} sx={{
             display:"flex",
             alignItems: 'center',
             py:1,
-            zIndex: 20
+            zIndex: 10,
         }}>
             <ToggleButtonGroup
             orientation="vertical"
@@ -284,7 +285,7 @@ function VerticalToolbar({exercisePage, selectedId, setSelectedId, textSelectedI
             handleRegeneration={handleRegeneration}
             />
 
-            <ToggleButtonGroup orientation="vertical">
+            <ToggleButtonGroup orientation="vertical" className='bg-white'>
                 <Tooltip title="Add Text" placement="right">
                     <ToggleButton value="text" onClick={()=>handleText()} data-ignore-click-outside>
                     <TextFieldsIcon />
@@ -322,7 +323,7 @@ function VerticalToolbar({exercisePage, selectedId, setSelectedId, textSelectedI
             </ToggleButtonGroup>
 
              {isText &&
-            <ToggleButtonGroup orientation="vertical">
+            <ToggleButtonGroup orientation="vertical" className='bg-white'>
                 <Tooltip title="Decrease Text Size" placement="right">
                     <div data-ignore-click-outside>
                     <ToggleButton value="increase" disabled={!isText || !decreseEnabled} onClick={()=>handleFontSize(false)}>
@@ -343,7 +344,7 @@ function VerticalToolbar({exercisePage, selectedId, setSelectedId, textSelectedI
             </ToggleButtonGroup>
             }
             {isText &&
-            <ToggleButtonGroup orientation="vertical"
+            <ToggleButtonGroup orientation="vertical" className='bg-white'
             value={isText? textFormat: []} 
             onChange={handleTextFormat}>
                 <Tooltip title="Bold" placement="right">

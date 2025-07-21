@@ -58,7 +58,7 @@ function Header({stepnumber}){
                 <Divider className='pt-2'/>
                 
             </div>
-            <div className='w-[60%] mt-2 mb-3'>
+            <div className='w-[60%] mt-2 mb-3 max-md:w-5/6'>
                     <Stepper activeStep={stepnumber}>
                         {steps.map((label) => (
                         <Step key={label}>

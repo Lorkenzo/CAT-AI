@@ -18,6 +18,7 @@ const Export = () => {
   const canvasRef = useRef();
   const [loading, setLoading] = useState(true)
   const [exerciseType, setExerciseType] = useState("Exercise")
+  const [downloaded, setDownloaded] = useState(false)
 
   const getUrl = ()=>{
     return exerciseType === "Exercise"? exportData.url 
@@ -77,11 +78,12 @@ const Export = () => {
         const url = getUrl()
         const filename = `${exerciseType}.pdf`
         API.handleDownloadFile(url,filename)
-    };
+        setDownloaded(true)
+    }; 
 
   return (
     <div className="flex flex-col w-full h-[120%] items-center">
-      <Header stepnumber={2} />
+      <Header stepnumber={downloaded?3:2} />
       <div className="flex flex-row justify-between w-[80%] my-2 max-md:w-full">
         <div className="flex flex-row items-center w-[50%] gap-3">
         <Chip color="primary" variant="outlined" size="large" icon={<FileCopyIcon />} label="Format" />

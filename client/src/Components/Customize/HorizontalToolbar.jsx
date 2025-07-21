@@ -6,6 +6,7 @@ import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
 import UndoIcon from '@mui/icons-material/Undo';
 import RedoIcon from '@mui/icons-material/Redo';
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import { Tooltip, TextField, Button, IconButton } from '@mui/material';
 import { useDocument } from '../../contexts/CustomizeContext';
 import { useNavigate } from 'react-router-dom';
@@ -122,8 +123,8 @@ function HorizontalToolBar({zoomIn,zoomOut,scale,fullScreen,setFullScreen, setSe
     }
 
     return(
-        <div className="flex w-[90%] h-[10%] justify-between">
-            <div className="flex gap-2 items-center" data-ignore-click-outside>
+        <div className={`flex ${fullScreen? "w-[95%]": "w-[90%]"} h-fit justify-between max-md:w-[85%]`}>
+            <div className="flex items-center md:gap-2" data-ignore-click-outside>
                 <Tooltip title="Undo" placement="bottom">
                     <div>
                     <IconButton onClick={undo} disabled={history.length === 0}>
@@ -145,25 +146,30 @@ function HorizontalToolBar({zoomIn,zoomOut,scale,fullScreen,setFullScreen, setSe
                     <ZoomOutIcon />
                     </IconButton>
                 </Tooltip>
-                <span>{Math.round(scale * 100)}%</span>
+                <span className='max-md:hidden'>{Math.round(scale * 100)}%</span>
                 <Tooltip title="Zoom In" placement="bottom" className="mr-2">
                     <IconButton onClick={zoomIn}>
                     <ZoomInIcon />
                     </IconButton>
                 </Tooltip>
+                <Tooltip title={fullScreen? "Reduce":"Expand"} placement="bottom" className="mr-2">
                 <IconButton onClick={()=>setFullScreen((prev)=>!prev)}>
                     {fullScreen?
                     <FullscreenExitIcon></FullscreenExitIcon>:
                     <FullscreenIcon></FullscreenIcon>}
                 </IconButton>
-                
+                </Tooltip>
             </div>
-            <div className="flex items-center w-1/3" data-ignore-click-outside>
-                    <TextField value={title} onChange={(e)=>setTitle(e.target.value)} fullWidth label="Exercise Title" variant="standard"></TextField>
-                </div>
-            <div className="flex items-center gap-3" data-ignore-click-outside>
-                <Button onClick={handlePageSwitch} variant="outlined" endIcon={<SwapVertIcon className={`${exercisePage === 1 && "-scale-x-[1]"}`}></SwapVertIcon>}>{exercisePage===1?"Solution":"Exercise"}</Button>
-                <Button onClick={handleExport} variant="contained" endIcon={<NavigateNextIcon></NavigateNextIcon>}>Export</Button>
+            
+            <div className="flex items-center md:gap-3" data-ignore-click-outside>
+                <Button className='max-md:hidden' onClick={handlePageSwitch} variant="outlined" endIcon={<SwapVertIcon className={`${exercisePage === 1 && "-scale-x-[1]"}`}></SwapVertIcon>}>{exercisePage===1?"Solution":"Exercise"}</Button>
+                <Button className='max-md:hidden' onClick={handleExport} variant="contained" endIcon={<NavigateNextIcon></NavigateNextIcon>}>Export</Button>
+                <Tooltip title={exercisePage===1? "Go to Solution":"Go to Exercise"} placement="bottom" className="mr-2">
+                <IconButton name="switch to solution" onClick={handlePageSwitch} className='hidden max-md:flex'><SwapVertIcon className={`${exercisePage === 1 && "-scale-x-[1]"}`}></SwapVertIcon></IconButton>
+                </Tooltip>
+                <Tooltip title="Export" placement="bottom" className="mr-2">
+                <IconButton onClick={handleExport} color='primary' className='hidden max-md:flex'><ExitToAppIcon></ExitToAppIcon></IconButton>
+                </Tooltip>
             </div>
         </div>
     )

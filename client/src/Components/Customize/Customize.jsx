@@ -103,10 +103,10 @@ function Customize({fullScreen, setFullScreen}) {
     },[])
 
     return (
-        <div className="flex flex-col w-full h-[140%] items-center">
+        <div className={`flex flex-col w-full ${fullScreen?"h-full":"h-[140%]"} items-center max-md:h-[100%]`}>
         {!fullScreen && <Header stepnumber={1}></Header>}
             <div className={`flex flex-col w-full ${fullScreen?"h-full":"h-[85%]"} items-center mb-3 ${loading || exporting? "pointer-events-none":""}`}>
-                <div className="sticky top-0 z-10 flex w-[90%] justify-start py-2 items-center">
+                <div className={`sticky top-0 z-10 flex ${fullScreen?"w-full":"w-[90%]"} justify-start py-2 max-md:w-full`}>
                 <HorizontalToolBar 
                 zoomIn={zoomIn} zoomOut={zoomOut} 
                 scale={scale} 
@@ -118,10 +118,10 @@ function Customize({fullScreen, setFullScreen}) {
                 exercisePage={exercisePage}
                 handlePageSwitch={handlePageSwitch}></HorizontalToolBar>
                 </div>
-                <div className="flex flex-row w-full h-full justify-center">
+                <div className="flex flex-row w-full h-full justify-center relative">
                     <div
                     ref={wrapperRef}
-                    className="relative w-[85%] h-full overflow-auto bg-gray-100 pt-3" 
+                    className={`relative ${fullScreen? "w-full": "w-[85%]"} h-full overflow-auto bg-gray-100 pt-3`}
                     >
                         {/* Contenuto centrato con offset dinamico */}
                         {(loading || exporting) && <Loading></Loading>}

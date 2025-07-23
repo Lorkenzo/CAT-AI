@@ -4,7 +4,8 @@ import {
   Typography,
   IconButton,
   Card,
-  Avatar
+  Avatar,
+  Alert
 } from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -23,8 +24,8 @@ const formatFileSize = (bytes) => {
 
 function FileUploader({setUploading}) {
   const [isDragOver, setIsDragOver] = useState(false);
-  
   const [uploadError, setUploadError] = useState(false)
+  const [isNotFileExercise, setIsNotFileExercise] = useState(false)
   const fileInputRef = useRef(null);
 
   const { formData, setFormData, resetFormData } = useFormData();
@@ -51,8 +52,15 @@ function FileUploader({setUploading}) {
 
       const relativePath = new URL(file.url).pathname.replace(/^\/+/, '');
       const text = await API.handleTextExtraction(relativePath);
-      console.log(text.text)
       const res = await API.handleTextAnalysis(text.text);
+      if (res.error) {
+        
+        setUploadError(true)
+        setIsNotFileExercise(true)
+        handleDelete(file.url)
+        return
+      }
+
       setFormData(prev => ({
           ...prev,
           exercisetext: res.text,
@@ -82,9 +90,9 @@ function FileUploader({setUploading}) {
     setIsDragOver(false); 
   };
 
-  const handleDelete = async () => {
+  const handleDelete = async (url) => {
     try{
-      const relativePath = new URL(formData.file.url).pathname.replace(/^\/+/, '');
+      const relativePath = new URL(url).pathname.replace(/^\/+/, '');
       await API.handleDeleteFile(relativePath)
       resetFormData()
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -129,13 +137,14 @@ function FileUploader({setUploading}) {
             {formatFileSize(formData.file.size)} • Upload complete
         </Typography>
         </Box>
-        <IconButton onClick={handleDelete} size="medium">
+        <IconButton onClick={()=>handleDelete(formData.file.url)} size="medium">
         <DeleteIcon />
         </IconButton>
         <CheckCircleIcon sx={{ color: 'green', ml: 1 }} />
     </Card>
     
     :
+    <div className='flex flex-col my-2'>
     <Box
       onClick={() => fileInputRef.current.click()}
       onDrop={handleDrop}
@@ -150,7 +159,6 @@ function FileUploader({setUploading}) {
         borderColor: uploadError? 'error.main': 'primary.main',
         borderRadius: 2,
         p: 4,
-        mt: 2,
         bgcolor: isDragOver ? 'rgba(25, 118, 210, 0.08)' : uploadError ? 'rgba(211, 47, 47, 0.04)' : "",
         justifyContent: "center",
         alignItems: "center",
@@ -185,6 +193,10 @@ function FileUploader({setUploading}) {
         onChange={handleFileSelect}
       />
     </Box>
+    {isNotFileExercise && <Alert className="my-2" severity="error" onClose={() => {setIsNotFileExercise(false)}}>
+      The uploaded file does not contain a valid exercise, or the exercise is not readable. Upload another file or <a href='/generate/manual'>insert manually the exercise info</a>.
+    </Alert>}
+    </div>
     }
     </>
   );

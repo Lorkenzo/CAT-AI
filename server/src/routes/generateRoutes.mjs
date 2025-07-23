@@ -1,7 +1,7 @@
 import express from "express"
 import { OpenAI } from "openai"
 import dotenv from "dotenv"
-import { generatePrompt, regenerateElementPrompt, regenerateAllPrompt, generateImagePrompt, cleanJSON } from "../utils.mjs";
+import { extractionPrompt, generatePrompt, regenerateElementPrompt, regenerateAllPrompt, generateImagePrompt, cleanJSON } from "../utils.mjs";
 import { pipeline } from "stream";
 import { promisify } from "util";
 import path from "path"
@@ -22,38 +22,13 @@ const streamPipeline = promisify(pipeline);
 generateRoutes.post('/exercise-info', async (req, res) => {
   const { text } = req.body;
 
-  const prompt = `
-    You are an expert in pedagogy and instructional design for primary and middle school education.
-
-    You will be given a piece of text. If it clearly contains a valid school exercise (e.g., reading comprehension, math problem, grammar activity), analyze it and return **only** a JSON object with the following structure:
-
-    {
-    "text": "...",                         // the full original exercise text
-    "prerequisites": [ "...", "..." ],     // list of pre-skills or prior knowledge needed to do the exercise (max 5 words for each)
-    "learning_objectives": [ "...", "..." ], // what students are expected to learn, the step next to the prerequisites (max 5 words for each)
-    "school_level": "elementary" | "middle",
-    "grade": 1-5 (for elementary) or 1-3 (for middle school) //string
-    }
-
-
-    If the input text is **not** a valid school exercise (e.g., it's just random text, incomplete, unrelated to teaching, or nonsensical), return **only** this JSON object:
-
-    {
-    "error": "The provided text does not appear to be a valid school exercise."
-    }
-
-    ⚠️ Do not wrap the JSON in markdown code blocks (no triple backticks, no \`\`\`json). Just return the raw JSON object without any extra characters.
-
-    Input:
-    """${text}"""
-    `;
-
+  const prompt = extractionPrompt(text)
 
   try {
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0.3,
+      temperature: 0.2,
     });
     
     const result = JSON.parse(cleanJSON(completion.choices[0].message.content));
@@ -72,7 +47,7 @@ generateRoutes.post('/exercise', async (req, res) => {
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0.4,
+      temperature: 0.8,
     });
 
     const result = JSON.parse(cleanJSON(completion.choices[0].message.content));
@@ -91,7 +66,7 @@ generateRoutes.post('/exercise-again', async (req, res) => {
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0.4,
+      temperature: 0.6,
     });
 
     const result = JSON.parse(cleanJSON(completion.choices[0].message.content));
@@ -110,7 +85,8 @@ generateRoutes.post('/element-again', async (req, res) => {
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0.4,
+      temperature: 0.6,
+      max_tokens: 150, // limite rigido di sicurezza
     });
 
     const result = JSON.parse(cleanJSON(completion.choices[0].message.content));

@@ -5,10 +5,10 @@ import { useDocument } from '../../contexts/CustomizeContext';
 const PAGE_WIDTH = 794;
 const PAGE_HEIGHT = 1123;
 
-function ImageElement({ el, selectedId, setSelectedId, imageSelectedId, setImageSelectedId }) {
+function ImageElement({ el, selectedId, setSelectedId, imageSelectedId, setImageSelectedId, snapX, setSnapX }) {
   const nodeRef = useRef(null);
   const containerRef = useRef(null);
-  const { updateImage } = useDocument();
+  const { updateImage, images, textBoxes } = useDocument();
 
   const [size, setSize] = useState({ width: el.w, height: el.h });
 
@@ -40,6 +40,32 @@ function ImageElement({ el, selectedId, setSelectedId, imageSelectedId, setImage
     }
   };
 
+  const checkAlignmentX = (x, w) => {
+    const SNAP_THRESHOLD = 5;
+    const pageCenter = PAGE_WIDTH / 2;
+
+    // Centro del blocco corrente
+    const currentCenter = x + w / 2;
+    // Verifica allineamento con il centro della pagina
+    if (Math.abs(currentCenter - pageCenter) < SNAP_THRESHOLD) {
+      return {x : pageCenter - w / 2, center: true}; // Snap al centro
+    }
+    // Verifica allineamento con sinistra di altri blocchi
+    for (const box of textBoxes) {
+      if (Math.abs(x - box.position.x) < SNAP_THRESHOLD) {
+        return {x : box.position.x, center: false}; // Snap alla sinistra di un altro box
+      }
+    }
+    for (const box of images) {
+      if (box.id === el.id || box.page !== el.page) continue; // ignora se stesso e le altre pagine
+
+      if (Math.abs(x - box.position.x) < SNAP_THRESHOLD) {
+        return {x : box.position.x, center: false}; // Snap alla sinistra di un altro box
+      }
+    }
+    return null;
+  };
+
   const handleSingleClick = () => {
     if (imageSelectedId !== el.id) setImageSelectedId(null);
     setSelectedId(el.id);
@@ -62,11 +88,16 @@ function ImageElement({ el, selectedId, setSelectedId, imageSelectedId, setImage
       bounds="parent"
       disabled={imageSelectedId === el.id}
       position={{ x: el.position.x, y: el.position.y }}
-      onStop={(e, data) =>
+      onStop={(e, data) => {
         updateImage(el.id, {
-          position: { x: data.x, y: data.y },
+          position: { x: snapX? snapX.x : data.x, y: data.y },
         })
-      }
+        if (snapX) setSnapX(null)
+      }}
+      onDrag={(e, data) => {
+      const snapx = checkAlignmentX(data.x, el.w);
+      setSnapX(snapx);
+    }}
     >
       <div
         ref={nodeRef}

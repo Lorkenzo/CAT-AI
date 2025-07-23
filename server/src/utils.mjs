@@ -1,4 +1,31 @@
 // utils/generatePrompt.js
+function extractionPrompt(text) {
+  return `
+      You are an expert in pedagogy and instructional design for primary and middle school education.
+  
+      You will be given a piece of text. If it clearly contains a valid school exercise (e.g., reading comprehension, math problem, grammar activity), analyze it and return **only** a JSON object with the following structure:
+  
+      {
+      "text": "...",                         // the full original exercise text
+      "prerequisites": [ "...", "..." ],     // list of pre-skills or prior knowledge needed to do the exercise (max 5 words for each)
+      "learning_objectives": [ "...", "..." ], // what students are expected to learn, the step next to the prerequisites (max 5 words for each)
+      "school_level": "elementary" | "middle",
+      "grade": 1-5 (for elementary) or 1-3 (for middle school) //string
+      }
+  
+      If the input text is not a valid school exercise (e.g., it's just random text, incomplete, unrelated to teaching, or nonsensical), return **only** this JSON object:
+  
+      {
+      "error": "The provided text does not appear to be a valid school exercise."
+      }
+  
+      Respond only with the JSON object, no commentary, no markdown formatting.
+  
+      Input:
+      """${text}"""
+      `;
+}
+
 function generatePrompt(formData) {
   
   const {
@@ -27,7 +54,7 @@ function generatePrompt(formData) {
 
   return `
     You are an expert educational content creator for ${school} school, grade ${grade}.
-    Create a ${exercise_level} level exercise based on the following goals and prerequisites:
+    Create a ${exercise_level} level exercise based on the following features:
 
     Goals: ${formattedGoals}
     Prerequisites: ${formattedPre}
@@ -37,11 +64,8 @@ function generatePrompt(formData) {
     Original text to take inspiration from:
     """${exercisetext || "N/A"}"""
 
-    Be aware:
-    - The exercise must be inspired by the original text, but it must NOT copy its content. 
-    - You can use the same terminology or typology of the given exercise text
-
-    Style guide:
+    Creation guide:
+    - The exercise must be inspired by the original text, but it must NOT copy its content, be creative.
     - Use the following color palette for text color selection: ${palette.join(", ")}.
     - The language of the output must always match the language of the input text. For example, if the input is in Italian, the entire output (title, instructions, questions, etc.) must also be in Italian.
     ${reminder ? "- Include a useful reminder or note at the end of the exercise concerning the pre-prequisites." : ""}
@@ -51,16 +75,16 @@ function generatePrompt(formData) {
     Structure requirement:
     1. The first TextBox object must always be a title of the exercise.
     2. The second TextBox must always be a clear instruction of what the student has to do.
-    3. Then continue with the content blocks of the exercise.
+    3. The following ${n_questions} TextBoxes will contain a exercise each, remember to be creative!
     4. The solution will be displayed in another page, so the position for solution text boxes have to be resetted.
     5. The solution text boxes has to contain all the procedures.
 
-    Return your result ONLY as a JSON array of objects, each object must have this structure:
+    Return your result ONLY as a JSON array of objects, each object must have the following structure, no commentary, no markdown formatting:
 
     {
       "id": unique number (timestamp),
-      "page": 1 (exercise) or 2 (solution), //1 text box belogs to the exercise, 2 belongs to the solution
-      "position": { "x": <number>, "y": <number> }, // css position relative to the container, takes as a reference a container 794x1123 px
+      "page": 1 (exercise) or 2 (solution), //1 belogs to the exercise, 2 belongs to the solution
+      "position": { "x": <number>, "y": <number> }, // css position relative to the container, takes as a reference a container 794x1123 px, mantain a padding of a A4 pdf format
       "w": <width>, 
       "h": <height>,
       "content": "<text content>", 
@@ -70,8 +94,6 @@ function generatePrompt(formData) {
       "italic": true|false,
       "underlined": true|false
     }
-
-    Respond ONLY with the JSON array, no commentary, no formatting.
     `;
 }
 
@@ -145,7 +167,7 @@ function regenerateAllPrompt(allTextBoxes, userInstruction) {
     3. A user instruction describing what should be changed
 
     Your task:
-    - Return the full updated JSON with the changes according to the instructions, mantaining the same ID for each object
+    - Return the full updated JSON with the changes according to the instructions, mantaining the same ID and other formatting properties (unless the instruction says to change them)
     - You can change every other object field in order to accomplish the instruction
     - Maintain clarity and coherence with respect to the original one
     - Preserve the language used in the text boxes
@@ -185,4 +207,4 @@ function cleanJSON(rawText){
     .trim();
 };
 
-export {generatePrompt, generateImagePrompt, regenerateElementPrompt, regenerateAllPrompt, cleanJSON}
+export {extractionPrompt, generatePrompt, generateImagePrompt, regenerateElementPrompt, regenerateAllPrompt, cleanJSON}

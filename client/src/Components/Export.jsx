@@ -55,7 +55,7 @@ const Export = () => {
             viewport,
         };
 
-        // Salva la renderTask e attendila
+        
         renderTask = page.render(renderContext);
         await renderTask.promise;
         } catch (error) {

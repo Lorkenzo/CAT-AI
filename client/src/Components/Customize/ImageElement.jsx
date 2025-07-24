@@ -5,7 +5,7 @@ import { useDocument } from '../../contexts/CustomizeContext';
 const PAGE_WIDTH = 794;
 const PAGE_HEIGHT = 1123;
 
-function ImageElement({ el, selectedId, setSelectedId, imageSelectedId, setImageSelectedId, snapX, setSnapX }) {
+function ImageElement({ el, selectedId, setSelectedId, imageSelectedId, setImageSelectedId, snapX, setSnapX, snapY, setSnapY }) {
   const nodeRef = useRef(null);
   const containerRef = useRef(null);
   const { updateImage, images, textBoxes } = useDocument();
@@ -38,6 +38,33 @@ function ImageElement({ el, selectedId, setSelectedId, imageSelectedId, setImage
         h: offsetHeight,
       });
     }
+  };
+
+  
+  const checkAlignmentY = (y, h) => {
+    const SNAP_THRESHOLD = 5;
+    const pageCenter = PAGE_HEIGHT / 2;
+
+    // Centro del blocco corrente
+    const currentCenter = y + h / 2;
+    // Verifica allineamento con il centro della pagina
+    if (Math.abs(currentCenter - pageCenter) < SNAP_THRESHOLD) {
+      return {y : pageCenter - h / 2, center: true}; // Snap al centro
+    }
+    // Verifica allineamento con sinistra di altri blocchi
+    for (const box of textBoxes) {
+      if (box.id === el.id || box.page !== el.page) continue; // ignora se stesso e le altre pagine
+
+      if (Math.abs(y - box.position.y) < SNAP_THRESHOLD) {
+        return {y : box.position.y, center: false}; // Snap alla sinistra di un altro box
+      }
+    }
+    for (const box of images) {
+      if (Math.abs(y - box.position.y) < SNAP_THRESHOLD) {
+        return {y : box.position.y, center: false}; // Snap alla sinistra di un altro box
+      }
+    }
+    return null;
   };
 
   const checkAlignmentX = (x, w) => {
@@ -90,13 +117,17 @@ function ImageElement({ el, selectedId, setSelectedId, imageSelectedId, setImage
       position={{ x: el.position.x, y: el.position.y }}
       onStop={(e, data) => {
         updateImage(el.id, {
-          position: { x: snapX? snapX.x : data.x, y: data.y },
+          position: { x: snapX? snapX.x : data.x, y: snapY? snapY.y : data.y },
         })
         if (snapX) setSnapX(null)
+        if (snapY) setSnapY(null)
       }}
       onDrag={(e, data) => {
       const snapx = checkAlignmentX(data.x, el.w);
       setSnapX(snapx);
+      const snapy = checkAlignmentY(data.y, el.h);
+      console.log(snapy)
+      setSnapY(snapy);
     }}
     >
       <div

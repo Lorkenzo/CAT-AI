@@ -7,10 +7,10 @@ import { useFormData } from "../../contexts/FormContext";
 const PAGE_WIDTH = 794;
 const PAGE_HEIGHT = 1123;
 
-function TextElement({el, selectedId, setSelectedId, textSelectedId, setTextSelectedId, snapX, setSnapX }){
+function TextElement({el, selectedId, setSelectedId, textSelectedId, setTextSelectedId, snapX, setSnapX,snapY, setSnapY }){
     const ref = useRef(null);
     const nodeRef = useRef(null);
-    const {updateTextBox, textBoxes} = useDocument()
+    const {updateTextBox, textBoxes, images} = useDocument()
     const {formData} = useFormData()
 
     useEffect(() => {
@@ -47,6 +47,32 @@ function TextElement({el, selectedId, setSelectedId, textSelectedId, setTextSele
       for (const box of images) {
         if (Math.abs(x - box.position.x) < SNAP_THRESHOLD) {
           return {x : box.position.x, center: false}; // Snap alla sinistra di un altro box
+        }
+      }
+      return null;
+    };
+
+    const checkAlignmentY = (y, h) => {
+      const SNAP_THRESHOLD = 5;
+      const pageCenter = PAGE_HEIGHT / 2;
+
+      // Centro del blocco corrente
+      const currentCenter = y + h / 2;
+      // Verifica allineamento con il centro della pagina
+      if (Math.abs(currentCenter - pageCenter) < SNAP_THRESHOLD) {
+        return {y : pageCenter - h / 2, center: true}; // Snap al centro
+      }
+      // Verifica allineamento con sinistra di altri blocchi
+      for (const box of textBoxes) {
+        if (box.id === el.id || box.page !== el.page) continue; // ignora se stesso e le altre pagine
+
+        if (Math.abs(y - box.position.y) < SNAP_THRESHOLD) {
+          return {y : box.position.y, center: false}; // Snap alla sinistra di un altro box
+        }
+      }
+      for (const box of images) {
+        if (Math.abs(y - box.position.y) < SNAP_THRESHOLD) {
+          return {y : box.position.y, center: false}; // Snap alla sinistra di un altro box
         }
       }
       return null;
@@ -90,13 +116,16 @@ function TextElement({el, selectedId, setSelectedId, textSelectedId, setTextSele
       position={{ x: el.position.x, y: el.position.y }}
       onStop={(e, data) => {
         updateTextBox(el.id, {
-          position: { x: snapX? snapX.x : data.x, y: data.y },
+          position: { x: snapX? snapX.x : data.x, y: snapY? snapY.y : data.y },
         })
         if (snapX) setSnapX(null)
+        if (snapY) setSnapY(null)
       }}
       onDrag={(e, data) => {
       const snapx = checkAlignmentX(data.x, el.w);
       setSnapX(snapx);
+      const snapy = checkAlignmentY(data.y, el.h);
+      setSnapY(snapy);
     }}
     >
       <div ref={nodeRef} style={{ position: 'absolute' }} data-ignore-click-outside>

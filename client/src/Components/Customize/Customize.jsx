@@ -25,6 +25,7 @@ function Customize({fullScreen, setFullScreen}) {
     const [exporting, setExporting] = useState(false);
     const [exercisePage, setExercisePage] = useState(1)
     const [snapX, setSnapX] = useState(null);
+    const [snapY, setSnapY] = useState(null);
 
     const ZOOM_STEP = 0.1;
     const MIN_ZOOM = 0.3;
@@ -133,24 +134,27 @@ function Customize({fullScreen, setFullScreen}) {
                         >
                             {/**Pages */}
                             {[1,2].map((page)=>(
-                                <div ref={exerciseRef} id="document" className={`relative w-full h-full bg-white border-1 ${exercisePage === page && !loading?"border-gray-800":"border-gray-300"}  ${loading || exporting? "pointer-events-none":""} drop-shadow-md pb-24 mb-3`}
-                                onClick={()=>setExercisePage(page)}
+                                <div key={page} ref={page === 1? exerciseRef: answerRef} id={page === 1? "document": "answer"} className={`relative w-full h-full bg-white border-1 ${exercisePage === page && !loading?"border-gray-800":"border-gray-300"}  ${loading || exporting? "pointer-events-none":""} drop-shadow-md pb-24 mb-3`}
+                                onMouseDown={()=>setExercisePage(page)}
                                 style={{
                                     cursor: exercisePage === page? "default": "pointer",
                                 }}>
                                     {loading && <div className="absolute inset-0 z-[1000] bg-gray-800/50"></div>}
-                                    {/**Snap bar */}
+                                    {/**Snap bar X Y */}
                                     {exercisePage===page && snapX !== null && (
                                         <div style={{ position: 'absolute', left: snapX.center? PAGE_WIDTH/2 : snapX.x, top: 0, bottom: 0,width: 0, borderLeft: '2px dashed red', zIndex: 9999, pointerEvents: 'none'}}/>
                                         )}
+                                    {exercisePage===page && snapY !== null && (
+                                        <div style={{ position: 'absolute', top: snapY.center? PAGE_HEIGHT/2 : snapY.y, left: 0, right:0, height: 0, borderTop: '2px dashed red', zIndex: 9999, pointerEvents: 'none'}}/>
+                                        )}
                                     {/**Content */}
                                     {textBoxes.map((el) => (  
-                                        el.page===page ? <TextElement key={el.id} el={el} selectedId={selectedId} setSelectedId={setSelectedId} textSelectedId={textSelectedId} setTextSelectedId={setTextSelectedId} snapX={snapX} setSnapX={setSnapX}></TextElement>
+                                        el.page===page ? <TextElement key={el.id} el={el} selectedId={selectedId} setSelectedId={setSelectedId} textSelectedId={textSelectedId} setTextSelectedId={setTextSelectedId} snapX={snapX} setSnapX={setSnapX} snapY={snapY} setSnapY={setSnapY}></TextElement>
                                         : null
                                         
                                     ))}
                                     {images.map((el)=>(
-                                        el.page===page ? <ImageElement key={el.id} el={el} selectedId={selectedId} setSelectedId={setSelectedId} imageSelectedId={imageSelectedId} setImageSelectedId={setImageSelectedId} snapX={snapX} setSnapX={setSnapX}></ImageElement>
+                                        el.page===page ? <ImageElement key={el.id} el={el} selectedId={selectedId} setSelectedId={setSelectedId} imageSelectedId={imageSelectedId} setImageSelectedId={setImageSelectedId} snapX={snapX} setSnapX={setSnapX} snapY={snapY} setSnapY={setSnapY}></ImageElement>
                                         : null
                                         ))
                                     }

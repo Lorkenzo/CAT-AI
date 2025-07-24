@@ -98,6 +98,8 @@ function TextElement({el, selectedId, setSelectedId, textSelectedId, setTextSele
     ? 'border-2 border-[#2196f3]'
     : selectedId === el.id
     ? 'border-2 border-[#888]'
+    : (snapY?.y === el.position.y || snapX?.x === el.position.x) && selectedId !== el.id?
+    'border-2 border-[#ccc]'
     : 'hover:border-2 hover:border-[#ccc] border-2 border-transparent';
 
   const getFontClass = (font) => {
@@ -155,7 +157,7 @@ function TextElement({el, selectedId, setSelectedId, textSelectedId, setTextSele
             className={` rounded border-dashed ${borderClass} ${getFontClass(formData.style[formData.selectedStyle].font.value)}`}
             style={{
               width: el.w,
-              height: el.h,
+              height: el.h -16,
               cursor: 'text',
               fontSize: el.textSize,
               fontWeight: el.bold ? 'bold' : 'normal',

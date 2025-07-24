@@ -107,6 +107,8 @@ function ImageElement({ el, selectedId, setSelectedId, imageSelectedId, setImage
     ? 'border-2 border-[#2196f3]'
     : selectedId === el.id
     ? 'border-2 border-[#888]'
+    : (snapY?.y === el.position.y || snapX?.x === el.position.x) && selectedId !== el.id?
+    'border-2 border-[#ccc]'
     : 'hover:border-2 hover:border-[#ccc] border-2 border-transparent';
 
   return (

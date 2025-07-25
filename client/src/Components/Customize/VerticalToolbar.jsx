@@ -230,7 +230,7 @@ function VerticalToolbar({exercisePage, selectedId, setSelectedId, textSelectedI
             value={regenOpen}
             onChange={handleRegenToggle}
             >
-                <Tooltip title="Generate Again" placement="right">
+                <Tooltip title="Regenerate All" placement="right">
                     <ToggleButton data-ignore-click-outside value="full" sx={{
                         color: 'white',
                         backgroundImage: 'linear-gradient(135deg, #ff69b4, #8a2be2)',

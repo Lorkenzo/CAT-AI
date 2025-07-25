@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, Fragment } from "react";
 import { useDocument } from "../../contexts/CustomizeContext";
 import { HorizontalToolBar } from "./HorizontalToolbar";
 import { VerticalToolbar } from "./VerticalToolbar";
@@ -6,12 +6,15 @@ import { TextElement } from "./TextElement";
 import { ImageElement } from "./ImageElement";
 import { Header } from "../Header"
 import { Loading } from "../Loading";
+import { Button, Typography } from "@mui/material";
+import SyncProblemIcon from '@mui/icons-material/SyncProblem';
+import API from "../../API/API.mjs";
 
 const PAGE_WIDTH = 794;
 const PAGE_HEIGHT = 1123;
 
 function Customize({fullScreen, setFullScreen}) {
-    const {textBoxes,images,deleteTextBox,deleteImage, undo, redo} = useDocument()
+    const {textBoxes,images,deleteTextBox,deleteImage, undo, redo, history, updateTextBoxes} = useDocument()
 
     const wrapperRef = useRef(null);
     const exerciseRef = useRef(null)
@@ -78,7 +81,7 @@ function Customize({fullScreen, setFullScreen}) {
         handleResize();
         window.addEventListener("resize", handleResize);
         return () => window.removeEventListener("resize", handleResize);
-    }, []);
+    }, [fullScreen]);
 
     useEffect(()=>{
         const wrapper = wrapperRef.current;
@@ -98,6 +101,22 @@ function Customize({fullScreen, setFullScreen}) {
             exerciseRef.current.scrollIntoView({ behavior: "smooth" });
         }
         setExercisePage(prev => prev === 1? 2 : 1)
+    }
+
+    const handleSolutionCorrection = async () =>{
+        try{
+            setLoading(true)
+            const corrections = await API.handleSolutionRegeneration(textBoxes)
+            console.log(corrections)
+            updateTextBoxes(corrections)
+            
+        }
+        catch(err){
+            console.log(err)
+        }
+        finally{
+            setLoading(false)
+        }
     }
 
     return (
@@ -133,8 +152,20 @@ function Customize({fullScreen, setFullScreen}) {
                             }}
                         >
                             {/**Pages */}
-                            {[1,2].map((page)=>(
-                                <div key={page} ref={page === 1? exerciseRef: answerRef} id={page === 1? "document": "answer"} className={`relative w-full h-full bg-white border-1 ${exercisePage === page && !loading?"border-gray-800":"border-gray-300"}  ${loading || exporting? "pointer-events-none":""} drop-shadow-md pb-24 mb-3`}
+                            {[1,2].map((page)=>{
+                                return(
+                                <Fragment key={page}>
+                                {page === 2 && loading? null: page === 2?
+                                <div className="flex fixed -translate-y-8 h-50 w-fit max-w-60 px-2 duration-300 rounded-t-md hover:-translate-y-24"> 
+                                    <Button onClick={handleSolutionCorrection} variant="contained" color="info" sx={{display: "flex", flexDirection: "column", justifyContent: "start", textTransform: "none"}}>
+                                    <div className="flex flex-row gap-1">
+                                        <SyncProblemIcon></SyncProblemIcon>
+                                        <Typography variant="button">Re-Compute Solution</Typography>
+                                    </div>
+                                    <Typography variant="caption">The exercise is changed or the solution is unreliable? Regenerate Now</Typography>
+                                    </Button>
+                                </div>:null}
+                                <div ref={page === 1? exerciseRef: answerRef} id={page === 1? "document": "answer"} className={`relative w-full h-full bg-white border-1 ${exercisePage === page && !loading?"border-gray-800":"border-gray-300"}  ${loading || exporting? "pointer-events-none":""} drop-shadow-md pb-24 mb-8`}
                                 onMouseDown={()=>setExercisePage(page)}
                                 style={{
                                     cursor: exercisePage === page? "default": "pointer",
@@ -159,7 +190,8 @@ function Customize({fullScreen, setFullScreen}) {
                                         ))
                                     }
                                 </div>
-                            ))}
+                                </Fragment>)
+                            })}
                         </div>
                         
                     </div>

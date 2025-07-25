@@ -164,7 +164,7 @@ function regenerateAllPrompt(allTextBoxes, userInstruction) {
 
     You will receive:
     1. The full current list of TextBox blocks
-    3. A user instruction describing what should be changed
+    2. A user instruction describing what should be changed
 
     Your task:
     - Return the full updated JSON with the changes according to the instructions, mantaining the same ID and other formatting properties (unless the instruction says to change them)
@@ -180,6 +180,44 @@ function regenerateAllPrompt(allTextBoxes, userInstruction) {
     User instruction: "${userInstruction}"
 
     Respond with only the updated TextBox as JSON, no markdown or extra text.
+    `;
+}
+
+function regenerateSolutionPrompt(allTextBoxes) {
+
+  return `
+    You are a pedagogical assistant. You are working with a JSON-based editable layout system for educational exercises.
+
+    Each block of the exercise is represented as a TextBox object with this structure:
+
+    {
+      "id": unique number (timestamp),
+      "page": 1 (exercise) or 2 (solution),
+      "position": { "x": <number>, "y": <number> }, //referenced to container 794x1123 px
+      "w": <width>, 
+      "h": <height>,
+      "content": "<text content>", 
+      "textSize": <font size between 12 and 24>,
+      "textColor": "<color from other boxes palette or #000000>",
+      "bold": true|false,
+      "italic": true|false,
+      "underlined": true|false
+    }
+
+    You will receive the full current list of TextBox blocks
+
+    Your task:
+    - Correct the content field of the solution textBoxes (page=2) in relation to the corresponding exercise textBoxes (page = 1), if any, mantaining the same ID and other formatting properties.
+    - If a part of the solution is missing in relation to the exercise, create a new object with the solution mantaing the formatting of other solution text boxes and a new timestamp ID.
+    - Correct, if needed, the position field of the solutions textBoxes in order to match the order of the exercises and to be placed at the start of the solution page.
+    - Maintain clarity and coherence with the solution correction
+    - Preserve the language used in the text boxes
+
+    Here is the list of current TextBoxes:
+
+    ${JSON.stringify(allTextBoxes, null, 2)}
+
+    Respond with only the JSON array of updated TextBoxes and/or created ones, if there are not return only JSON empty array, no markdown or extra formatting.
     `;
 }
 
@@ -207,4 +245,4 @@ function cleanJSON(rawText){
     .trim();
 };
 
-export {extractionPrompt, generatePrompt, generateImagePrompt, regenerateElementPrompt, regenerateAllPrompt, cleanJSON}
+export {extractionPrompt, generatePrompt, generateImagePrompt, regenerateElementPrompt, regenerateAllPrompt, regenerateSolutionPrompt, cleanJSON}

@@ -3,7 +3,7 @@ import Typography from '@mui/material/Typography';
 import { IconButton, Toolbar } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import SettingsIcon from '@mui/icons-material/Settings';
-import LogoCatAI from "../assets/logo.png"
+import LogoCatAI from "../assets/CAT-AI.png"
 
 function NavBar({setIsSettingOpened}){
     const navigate = useNavigate()

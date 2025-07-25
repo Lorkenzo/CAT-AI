@@ -23,23 +23,40 @@ function HorizontalToolBar({zoomIn,zoomOut,scale,fullScreen,setFullScreen, setSe
     const {exportData, setExportData} = useExportData()
 
     const generatePdfFromDocument = async (element, headingHTML, title) => {
-    const originalBorder = element.style.border;
-    element.style.border = "none";
+    // Clona solo l'elemento da esportare (già passato come param: document o answer)
+    const clone = element.cloneNode(true);
+    clone.style.border = "none";
+    // Crea un contenitore neutro (nessuna trasformazione o scaling)
+    const wrapper = document.createElement('div');
+    wrapper.style.position = 'absolute';
+    wrapper.style.top = '0';
+    wrapper.style.left = '0';
+    wrapper.style.width = `${element.offsetWidth}px`;
+    wrapper.style.height = `${element.offsetHeight}px`;
+    wrapper.style.background = 'white';
+    wrapper.style.zIndex = '-1';
+    wrapper.style.pointerEvents = 'none'; // evita interazioni
+    wrapper.style.opacity = '0'; // invisibile ma visibile al DOM
+    wrapper.appendChild(clone);
 
-    const heading = document.createElement('div');
+    // Aggiungi heading se presente
     if (headingHTML !== "") {
+        const heading = document.createElement('div');
         heading.innerHTML = headingHTML;
-        element.insertBefore(heading, element.firstChild);
+        clone.insertBefore(heading, clone.firstChild);
     }
 
-    const canvas = await html2canvas(element, {
+    // Inserisci nel DOM temporaneamente
+    document.body.appendChild(wrapper);
+
+    const canvas = await html2canvas(clone, {
         scale: 2,
         useCORS: true,
+        windowWidth: element.scrollWidth, // forza larghezza piena
     });
 
     const imgData = canvas.toDataURL('image/png');
 
-    // Formato A4 in punti jsPDF (unità default: mm, px o pt)
     const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
@@ -49,18 +66,11 @@ function HorizontalToolBar({zoomIn,zoomOut,scale,fullScreen,setFullScreen, setSe
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
 
-    // Dimensioni dell'immagine in pixel
-    const imgWidthPx = canvas.width;
-    const imgHeightPx = canvas.height;
-
-    // Converti pixel in mm assumendo 96 DPI come riferimento (1 pollice = 25.4 mm)
     const pxPerMm = 96 / 25.4;
-    const imgWidthMm = imgWidthPx / pxPerMm;
-    const imgHeightMm = imgHeightPx / pxPerMm;
+    const imgWidthMm = canvas.width / pxPerMm;
+    const imgHeightMm = canvas.height / pxPerMm;
 
-    // Scala per adattare proporzionalmente all'interno di A4
     const ratio = Math.min(pageWidth / imgWidthMm, pageHeight / imgHeightMm);
-
     const imgScaledWidth = imgWidthMm * ratio;
     const imgScaledHeight = imgHeightMm * ratio;
 
@@ -69,8 +79,8 @@ function HorizontalToolBar({zoomIn,zoomOut,scale,fullScreen,setFullScreen, setSe
 
     pdf.addImage(imgData, 'PNG', marginX, marginY, imgScaledWidth, imgScaledHeight);
 
-    element.style.border = originalBorder;
-    if (headingHTML !== "") heading.remove();
+    // Pulizia
+    document.body.removeChild(wrapper);
 
     const blob = pdf.output('blob');
     const formData = new FormData();
@@ -84,6 +94,7 @@ function HorizontalToolBar({zoomIn,zoomOut,scale,fullScreen,setFullScreen, setSe
         console.error('Errore durante upload PDF:', error);
     }
 };
+
 
     const headingHTML = `
         <div style="border-bottom: 1px solid #ccc; padding: 20px;">

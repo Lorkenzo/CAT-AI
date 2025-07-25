@@ -100,13 +100,36 @@ export const DocumentProvider = ({ children }) => {
       console.log(updated)
       saveToHistory(updated, images);
     }
-    setTextBoxes(updated)
-
+    else{
+      setTextBoxes(updated)
+    }
   };
 
-  const deleteTextBox = (id) => {
-    const updated = textBoxes.filter((box) => box.id !== id);
-    saveToHistory(updated, images);
+  const updateTextBoxes = (updates) =>{
+    let updatedBoxes = [...textBoxes];
+
+    for (const c of updates) {
+        const idx = updatedBoxes.findIndex(e => e.id === c.id);
+        if (idx !== -1) {
+          updatedBoxes[idx] = { ...updatedBoxes[idx], ...c };
+        } else {
+          updatedBoxes.push(c);
+        }
+      }
+
+      const last = history[history.length - 1];
+      const isSame = last && JSON.stringify(last.textBoxes) === JSON.stringify(updatedBoxes);
+
+      if (!isSame) {
+        saveToHistory(updatedBoxes, images);
+      } else {
+        setTextBoxes(updatedBoxes);
+      }
+    }
+
+    const deleteTextBox = (id) => {
+      const updated = textBoxes.filter((box) => box.id !== id);
+      saveToHistory(updated, images);
   };
 
   // ───────────── IMAGES ─────────────
@@ -152,6 +175,7 @@ export const DocumentProvider = ({ children }) => {
         setImages,
         addTextBox,
         updateTextBox,
+        updateTextBoxes,
         deleteTextBox,
         addImage,
         updateImage,

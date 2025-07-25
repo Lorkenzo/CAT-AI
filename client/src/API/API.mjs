@@ -31,7 +31,6 @@ const handleDownloadFile = async (fileUrl, fileName) => {
       document.body.appendChild(link);
       link.click();
 
-      // Pulizia
       document.body.removeChild(link);
       window.URL.revokeObjectURL(blobUrl);
     } catch (error) {
@@ -183,6 +182,34 @@ const handleExerciseRegeneration = async (textBoxes, text) => {
   }
 };
 
+const handleSolutionRegeneration = async (textBoxes) => {
+  try {
+    const response = await fetch(`${SERVER_URL}/api/generate/solution-again`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        textBoxes
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error('Errore:', data.errore);
+      return { errore: data.errore };
+    }
+
+    console.log('Risultato:', data);
+    return data;
+
+  } catch (error) {
+    console.error('Errore di rete:', error);
+    return { errore: 'Errore di rete o server non disponibile' };
+  }
+};
+
 const handleElementRegeneration = async (textBoxes, selectedId, text) => {
   try {
     const response = await fetch(`${SERVER_URL}/api/generate/element-again`, {
@@ -221,8 +248,9 @@ const API = {
   handleTextAnalysis,
   handleExerciseGeneration,
   handleExerciseRegeneration,
+  handleSolutionRegeneration,
   handleElementRegeneration,
-  handleImageGeneration
+  handleImageGeneration,
 }
 
 export default API

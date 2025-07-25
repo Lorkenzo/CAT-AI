@@ -1,7 +1,7 @@
 import express from "express"
 import { OpenAI } from "openai"
 import dotenv from "dotenv"
-import { extractionPrompt, generatePrompt, regenerateElementPrompt, regenerateAllPrompt, generateImagePrompt, cleanJSON } from "../utils.mjs";
+import { extractionPrompt, generatePrompt, regenerateElementPrompt, regenerateAllPrompt, generateImagePrompt, regenerateSolutionPrompt, cleanJSON } from "../utils.mjs";
 import { pipeline } from "stream";
 import { promisify } from "util";
 import path from "path"
@@ -66,7 +66,26 @@ generateRoutes.post('/exercise-again', async (req, res) => {
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0.6,
+      temperature: 0.4,
+    });
+
+    const result = JSON.parse(cleanJSON(completion.choices[0].message.content));
+    res.json(result);
+  } catch (error) {
+    console.error('Errore:', error);
+    res.status(500).json({ error: 'Errore durante la generazione.' });
+  }
+});
+
+generateRoutes.post('/solution-again', async (req, res) => {
+  const { textBoxes } = req.body;
+
+  try {
+    const prompt = regenerateSolutionPrompt(textBoxes);
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.2,
     });
 
     const result = JSON.parse(cleanJSON(completion.choices[0].message.content));

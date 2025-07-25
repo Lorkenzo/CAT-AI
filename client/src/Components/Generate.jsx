@@ -221,10 +221,6 @@ function GenerationForm({fieldError}){
         }));
     };
 
-    useEffect(()=>{
-        console.log(fieldError)
-    },[fieldError])
-
     return(
         <div className="flex flex-col w-full h-[80%] mt-2 md:flex-row">
             <div className="flex flex-col w-1/2 h-full mr-6 max-md:w-full max-md:pb-2">

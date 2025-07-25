@@ -1,5 +1,10 @@
 import { Typography, Autocomplete, TextField, InputAdornment, Switch, Box } from "@mui/material";
 
+const countries = [
+    { code: 'IT', label: 'Italian' },
+    { code: 'GB', label: 'English' },
+]
+
 function AdvancedSettings({newSettings, setNewSettings}){
 
     const handleAutocompleteChange = (name) => (event,value) => {
@@ -13,31 +18,61 @@ function AdvancedSettings({newSettings, setNewSettings}){
         <div className="flex flex-col">
             <div className="flex flex-row justify-around pt-3">
                 <div className="flex justify-start w-1/2">
-                <Typography>Answer Confidence</Typography>
+                <Typography>Exercise Language</Typography>
                 </div>
                 <div className="flex justify-start w-1/2">
-                <Autocomplete 
-                fullWidth
-                name="confidence"
-                disableClearable
-                value={newSettings.confidence}
-                options={["95","99"]} 
-                sx={{ maxWidth: 150 }}
-                onChange={handleAutocompleteChange("confidence")}
-                renderInput={(params) => (
-                    <TextField {...params} variant="outlined" label="Select" size="small" 
-                    slotProps={{
-                        input: {
-                        ...params.InputProps,
-                        endAdornment: (
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            <InputAdornment position="end">%</InputAdornment>
-                            {params.InputProps.endAdornment}
+                    <Autocomplete
+                    onChange={handleAutocompleteChange("language")}
+                    value={newSettings.language}
+                    fullWidth
+                    disableClearable
+                    options={countries}
+                    sx={{ maxWidth: 150 }}
+                    isOptionEqualToValue={(option, value) => option.code === value.code}
+                    getOptionLabel={(option) => option.label}
+                    renderOption={(props, option) => {
+                        const { key, ...optionProps } = props;
+                        return (
+                        <Box
+                            key={key}
+                            component="li"
+                            sx={{ '& > img': { mr: 2, flexShrink: 0 } }}
+                            {...optionProps}
+                        >
+                            <img
+                            loading="lazy"
+                            width="20"
+                            srcSet={`https://flagcdn.com/w40/${option.code.toLowerCase()}.png 2x`}
+                            src={`https://flagcdn.com/w20/${option.code.toLowerCase()}.png`}
+                            alt=""
+                            />
+                            {option.label}
                         </Box>
-                        ),
-                        },
+                        );
+                    }}
+                    renderInput={(params) => {
+                        return (
+                        <TextField
+                            {...params}
+                            variant="outlined"
+                            size="small"
+                            label="Select"
+                            slotProps={{
+                            input: {
+                            ...params.InputProps,
+                            startAdornment: newSettings.language ? (
+                            <img
+                                loading="lazy"
+                                width="20"
+                                style={{ marginRight: 8 }}
+                                srcSet={`https://flagcdn.com/w40/${newSettings.language.code.toLowerCase()}.png 2x`}
+                                src={`https://flagcdn.com/w20/${newSettings.language.code.toLowerCase()}.png`}
+                                alt=""
+                            />
+                            ) : null,
+                            }}}
+                        />);
                     }}/>
-                )}></Autocomplete>
                 </div>
             </div> 
             <div className="flex flex-row justify-around pt-3">

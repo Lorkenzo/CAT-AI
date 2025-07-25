@@ -34,7 +34,6 @@ function FileUploader({setUploading}) {
     if (!selectedFile) return;
     const data = new FormData();
     data.append('file', selectedFile);
-    console.log(data)
     console.log(selectedFile)
     try {
       setUploading(true);
@@ -112,10 +111,6 @@ function FileUploader({setUploading}) {
         }, 4000);
         return () => clearTimeout(tid);
   },[uploadError])
-
-  useEffect(()=>{
-    console.log(formData.file)
-  },[])
 
   return (
     <>

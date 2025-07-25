@@ -43,7 +43,7 @@ const initialFormData = {
       "Playful":PlayfulStyle
     },
     selectedStyle: "MyStyle",
-    confidence: "95",
+    language: { code: 'IT', label: 'Italian' },
     dislexiaInclusive: false,
   }
 

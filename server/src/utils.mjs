@@ -42,7 +42,10 @@ function generatePrompt(formData) {
     style,
     selectedStyle,
     dislexiaInclusive,
+    language,
   } = formData;
+
+  console.log(language)
 
   const palette = style[selectedStyle]?.palette.filter(Boolean) || ["#000000"];
   const dislexia = dislexiaInclusive
@@ -67,7 +70,7 @@ function generatePrompt(formData) {
     Creation guide:
     - The exercise must be inspired by the original text, but it must NOT copy its content, be creative.
     - Use the following color palette for text color selection: ${palette.join(", ")}.
-    - The language of the output must always match the language of the input text. For example, if the input is in Italian, the entire output (title, instructions, questions, etc.) must also be in Italian.
+    - The language of the output must be in ${language.label}
     ${reminder ? "- Include a useful reminder or note at the end of the exercise concerning the pre-prequisites." : ""}
     ${example ? "- Include a worked-out example before the actual questions." : ""}
     ${dislexia}

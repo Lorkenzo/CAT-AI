@@ -28,6 +28,7 @@ function Settings({isSettingOpened, setIsSettingOpened}) {
 
     return(
         <Dialog
+        closeAfterTransition={false}
         open={isSettingOpened}
         >
             <DialogTitle className="flex items-center gap-3"><SettingsSuggestIcon />Generation Settings</DialogTitle>

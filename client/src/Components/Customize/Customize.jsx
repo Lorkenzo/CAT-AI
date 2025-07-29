@@ -156,8 +156,22 @@ function Customize({fullScreen, setFullScreen}) {
                                 return(
                                 <Fragment key={page}>
                                 {page === 2 && loading? null: page === 2?
-                                <div className="flex fixed -translate-y-8 h-50 w-fit max-w-60 px-2 duration-300 rounded-t-md hover:-translate-y-24"> 
-                                    <Button onClick={handleSolutionCorrection} variant="contained" color="info" sx={{display: "flex", flexDirection: "column", justifyContent: "start", textTransform: "none"}}>
+                                <div className="flex fixed -translate-y-8 h-24 w-fit max-w-60 px-2 duration-300 rounded-t-md hover:-translate-y-24"> 
+                                    <Button onClick={handleSolutionCorrection} variant="contained" color="info" sx={{display: "flex", flexDirection: "column", justifyContent: "start", textTransform: "none", 
+                                    color: 'white',
+                                    backgroundImage: 'linear-gradient(135deg, #ff69b4, #8a2be2)',
+                                    backgroundSize: '100% 100%',
+                                    transition: 'background-image 0.3s ease',
+                                    '&:hover': {
+                                    backgroundImage: 'linear-gradient(135deg, #ff4fa3, #6c22cc)', // hover più scuro
+                                    },
+                                    '&.Mui-selected': {
+                                    backgroundImage: 'linear-gradient(135deg, #ff85c1, #a366f5)', // selected più chiaro
+                                    color: 'white',
+                                    '&:hover': {
+                                        backgroundImage: 'linear-gradient(135deg, #ff69b4, #8a2be2)',
+                                    },
+                                    }}}>
                                     <div className="flex flex-row gap-1">
                                         <SyncProblemIcon></SyncProblemIcon>
                                         <Typography variant="button">Re-Compute Solution</Typography>

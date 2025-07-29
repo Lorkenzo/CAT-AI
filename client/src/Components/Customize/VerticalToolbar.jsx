@@ -446,7 +446,7 @@ function ImagePopover({anchorEl,open, onClose, imageInputRef, handleImageGenerat
         data-ignore-click-outside
         open={open}
         anchorEl={anchorEl}
-        onClose={onClose}
+        onClose={()=>{onClose(), setGenerateImage(false)}}
         anchorOrigin={{
             vertical: 'top',
             horizontal: 'left',

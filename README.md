@@ -4,6 +4,8 @@
 
 **Intelligent Tutoring System to design dynamic interface for Education**
 
+CAT-AI is a intelligent tutoring system enhanced with openai API to easily create, customize and export educational exercises for elementary and middle school.  
+
 Thesis by: **Lorenzo Cuccu** <br>
 Supervised by: **Luigi De Russis**,**Tommaso Calò**
 

@@ -68,7 +68,13 @@ function generatePrompt(formData) {
     """${exercisetext || "N/A"}"""
 
     Creation guide:
-    - The exercise must be inspired by the original text, but it must NOT copy its content, be creative.
+    - Carefully check the logical and/or mathematical correctness of every exercise and solution before finalizing the output. 
+    - Always perform step-by-step reasoning or calculations internally before writing the final solution. 
+    - If the exercise requires false statements. Avoid contradictions.
+    - Explanations must always align with the final answer. Never state something is true if the reasoning shows it is false, and never state something is false if the reasoning shows it is true.
+    - Avoid reusing content from the original text verbatim. Generate fresh and diverse exercise formats.
+    - Ensure variety in the exercise types: open-ended questions, true/false with explanation, fill-in-the-blank, multiple choice with plausible distractors, practical application problems.
+    - Write the solutions in a clear, structured way (step-by-step when relevant), so they can be followed by a student without confusion.
     - Use the following color palette for text color selection: ${palette.join(", ")}.
     - The language of the output must be in ${language.label}
     ${reminder ? "- Include a useful reminder or note at the end of the exercise concerning the pre-prequisites." : ""}
@@ -78,9 +84,10 @@ function generatePrompt(formData) {
     Structure requirement:
     1. The first TextBox object must always be a title of the exercise.
     2. The second TextBox must always be a clear instruction of what the student has to do.
-    3. The following ${n_questions} TextBoxes will contain a exercise each, remember to be creative!
-    4. The solution will be displayed in another page, so the position for solution text boxes have to be resetted.
-    5. The solution text boxes has to contain all the procedures.
+    3. The following ${n_questions} TextBoxes will contain a exercise each.
+    4. Each exercise content has its own instruction and 1-3 point to solve with that instuction. Use lists and newlines to make the exercises well readable and formatted.
+    5. The solution will be displayed in another page, so the position for solution text boxes have to be resetted.
+    6. The solution text boxes has to contain all the procedures. Use newlines to format properly each solution.
 
     Return your result ONLY as a JSON array of objects, each object must have the following structure, no commentary, no markdown formatting:
 
@@ -95,7 +102,9 @@ function generatePrompt(formData) {
       "textColor": "<color from palette or #000000>",
       "bold": true|false,
       "italic": true|false,
-      "underlined": true|false
+      "underlined": true|false,
+      "modelconfidence": <integer 1-7>,
+      "rationale": "<short reason why the modelconfidence was given>"
     }
     `;
 }
@@ -118,7 +127,9 @@ function regenerateElementPrompt(allTextBoxes, targetId, userInstruction) {
       "textColor": "<color from other boxes palette or #000000>",
       "bold": true|false,
       "italic": true|false,
-      "underlined": true|false
+      "underlined": true|false,
+      "modelconfidence": <integer 1-7>,
+      "rationale": "<short reason why the modelconfidence was given>"
     }
 
     You will receive:
@@ -162,7 +173,9 @@ function regenerateAllPrompt(allTextBoxes, userInstruction) {
       "textColor": "<color from other boxes palette or #000000>",
       "bold": true|false,
       "italic": true|false,
-      "underlined": true|false
+      "underlined": true|false,
+      "modelconfidence": <integer 1-7>,
+      "rationale": "<short reason why the modelconfidence was given>"
     }
 
     You will receive:
@@ -196,7 +209,7 @@ function regenerateSolutionPrompt(allTextBoxes) {
     {
       "id": unique number (timestamp),
       "page": 1 (exercise) or 2 (solution),
-      "position": { "x": <number>, "y": <number> }, //referenced to container 794x1123 px
+      "position": { "x": <number>, "y": <number> }, //referenced to container 794x1123 px, use standard margin for A4 pdf file
       "w": <width>, 
       "h": <height>,
       "content": "<text content>", 
@@ -204,16 +217,19 @@ function regenerateSolutionPrompt(allTextBoxes) {
       "textColor": "<color from other boxes palette or #000000>",
       "bold": true|false,
       "italic": true|false,
-      "underlined": true|false
+      "underlined": true|false,
+      "modelconfidence": <integer 1-7>,
+      "rationale": "<short reason why the modelconfidence was given>"
     }
 
     You will receive the full current list of TextBox blocks
 
     Your task:
     - Correct the content field of the solution textBoxes (page=2) in relation to the corresponding exercise textBoxes (page = 1), if any, mantaining the same ID and other formatting properties.
+    - Always perform step-by-step reasoning or calculations internally before writing the final solution. Be aware to possible contradictions.
     - If a part of the solution is missing in relation to the exercise, create a new object with the solution mantaing the formatting of other solution text boxes and a new timestamp ID.
     - Correct, if needed, the position field of the solutions textBoxes in order to match the order of the exercises and to be placed at the start of the solution page.
-    - Maintain clarity and coherence with the solution correction
+    - Maintain clarity and coherence with the solution correction. 
     - Preserve the language used in the text boxes
 
     Here is the list of current TextBoxes:
@@ -248,4 +264,54 @@ function cleanJSON(rawText){
     .trim();
 };
 
-export {extractionPrompt, generatePrompt, generateImagePrompt, regenerateElementPrompt, regenerateAllPrompt, regenerateSolutionPrompt, cleanJSON}
+function formattaData(timestamp) {
+  return new Date(timestamp).toLocaleString('it-IT', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  });
+}
+
+function formatDuration(diffMs) {
+  const totalSeconds = Math.floor(diffMs / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes} min ${seconds} sec`;
+}
+
+function calcDuration(keys, data) {
+  const durate = {};
+  for (let i = 0; i < keys.length - 1; i++) {
+    const fase = keys[i];
+    const faseSuccessiva = keys[i + 1];
+    const diffMs = data[faseSuccessiva] - data[fase];
+    durate[`${fase} -> ${faseSuccessiva}`] = formatDuration(diffMs);
+  }
+  return durate;
+}
+
+function createLog(keys, data, filename, school, grade, level) {
+  let log = '=== LOG ESPORTAZIONE ===\n';
+  log += `File used:${filename}\n`;
+  log += `Exercise: ${level} exercise for ${school} school ${grade} grade\n`;
+
+  // Timestamp assoluti
+  log += '\n--- TIMESTAMP ---\n';
+  for (const key of keys) {
+    log += `${key}: ${formattaData(data[key])} (${data[key]})\n`;
+  }
+
+  // Durate parziali
+  log += '\n--- TEMPI PARZIALI (min) ---\n';
+  const durate = calcDuration(keys, data);
+  for (const [fase, diff] of Object.entries(durate)) {
+    log += `${fase}: ${diff}\n`;
+  }
+
+  return log;
+}
+
+export {createLog, extractionPrompt, generatePrompt, generateImagePrompt, regenerateElementPrompt, regenerateAllPrompt, regenerateSolutionPrompt, cleanJSON}

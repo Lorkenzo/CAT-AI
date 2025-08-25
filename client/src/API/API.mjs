@@ -53,6 +53,33 @@ const handleDeleteFile = async (path) => {
     return res;
 }
 
+const handleLogSave = async (timestampKeys, exportData, filename, school, grade, exercise_level) => {
+  try {
+    const response = await fetch(`${SERVER_URL}/api/file/log`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        timestampKeys, exportData, filename, school, grade, exercise_level
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error('Errore:', data.errore);
+      return { errore: data.errore };
+    }
+
+    return data;
+
+  } catch (error) {
+    console.error('Errore di rete:', error);
+    return { errore: 'Errore di rete o server non disponibile' };
+  }
+};
+
 const handleTextExtraction = async (path) => {
    const response = await fetch(`${SERVER_URL}/api/file/extract-text`, {
       method: 'POST',
@@ -251,6 +278,7 @@ const API = {
   handleSolutionRegeneration,
   handleElementRegeneration,
   handleImageGeneration,
+  handleLogSave
 }
 
 export default API

@@ -18,14 +18,13 @@ import { Stack, ToggleButton, ToggleButtonGroup, Tooltip, Box, TextField, Popove
 import { ColorPicker } from './ColorPicker';
 import API from '../../API/API.mjs';
 
-function VerticalToolbar({exercisePage, selectedId, setSelectedId, textSelectedId, setTextSelectedId, imageSelectedId,  setImageSelectedId, setLoading}) {
+function VerticalToolbar({exercisePage, selectedId, setSelectedId, textSelectedId, setTextSelectedId, imageSelectedId,  setImageSelectedId, setLoading, regenOpen, setRegenOpen, anchorEl, setAnchorEl, setRegeneratedEl}) {
     const {textBoxes, images, updateTextBox, setTextBoxes, deleteTextBox, addTextBox, updateImage, deleteImage, addImage} = useDocument()
     const {formData} = useFormData()
     const [textFormat, setTextFormat] = useState([]);
     const [increseEnabled, setIncreaseEnabled] = useState(true)
     const [decreseEnabled, setDecreaseEnabled] = useState(true)
-    const [regenOpen, setRegenOpen] = useState(null); 
-    const [anchorEl, setAnchorEl] = useState(null);  
+    
     const imageInputRef = useRef(null);
     
     const [imageAnchor, setImageAnchor] = useState(null)
@@ -62,6 +61,10 @@ function VerticalToolbar({exercisePage, selectedId, setSelectedId, textSelectedI
             if (regenOpen ==="element") {
                 const res = await API.handleElementRegeneration(textBoxes,selectedId,prompt)
                 updateTextBox(selectedId,res)
+                setRegeneratedEl(prev=>({
+                    ...prev,
+                    [selectedId]: true
+                }))
             }
         }
         catch(err){

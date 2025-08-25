@@ -105,9 +105,8 @@ generateRoutes.post('/element-again', async (req, res) => {
       model: 'gpt-4o',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.6,
-      max_tokens: 150, // limite rigido di sicurezza
     });
-
+    console.log(completion.choices[0].message.content)
     const result = JSON.parse(cleanJSON(completion.choices[0].message.content));
     res.json(result);
   } catch (error) {

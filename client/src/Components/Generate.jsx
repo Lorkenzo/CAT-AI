@@ -9,12 +9,14 @@ import FillManuallyImg from "../assets/fillmanually.png"
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import { Routes, Route, Outlet, useNavigate } from "react-router-dom";
 import { useFormData } from "../contexts/FormContext"
+import { useExportData } from "../contexts/ExportData";
 import API from "../API/API.mjs"
 import { useDocument } from "../contexts/CustomizeContext"
 import { Loading } from "./Loading"
 
 function Generate(){
     const { formData, resetFormData } = useFormData();
+    const {setExportData} = useExportData()
     const { setTextBoxes} = useDocument()
     const [generating, setGenerating] = useState(false)
 
@@ -57,6 +59,7 @@ function Generate(){
         }
         
         //resetFormData()
+        setExportData((prev)=>({...prev, startTimeGeneration: Date.now()}))
 
         try{
             setGenerating(true)
@@ -67,6 +70,9 @@ function Generate(){
             console.log(err)
         }
         setGenerating(false)
+        
+        setExportData((prev)=>({...prev, startTimeEdit: Date.now()}))
+
         navigate("/customize")
     }
 

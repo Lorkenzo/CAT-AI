@@ -1,5 +1,6 @@
 import { Header } from "./Header";
 import { useExportData } from "../contexts/ExportData";
+import { useFormData } from "../contexts/FormContext";
 import { useEffect, useRef, useState } from 'react';
 import { CircularProgress, Autocomplete, TextField, Chip, Button } from "@mui/material";
 import FileCopyIcon from '@mui/icons-material/FileCopy';
@@ -7,14 +8,15 @@ import DownloadIcon from '@mui/icons-material/Download';
 import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
 import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 GlobalWorkerOptions.workerSrc = pdfWorker;
-
+import fs from "fs"
 import API from "../API/API.mjs";
 
 const PAGE_WIDTH = 794;
 const PAGE_HEIGHT = 1123;
 
-const Export = () => {
-  const { exportData } = useExportData();
+function Export() {
+  const { exportData, setExportData } = useExportData();
+  const {formData} = useFormData()
   const canvasRef = useRef();
   const [loading, setLoading] = useState(true)
   const [exerciseType, setExerciseType] = useState("Exercise")
@@ -74,12 +76,24 @@ const Export = () => {
     }, [exerciseType, canvasRef.current]);
 
     
-    const handleDownloadFile = () => {
+    const handleDownloadFile = async () => {
+        await setExportData((prev)=>({...prev, startTimeDownload: Date.now()}))
         const url = getUrl()
         const filename = `${exerciseType}.pdf`
-        API.handleDownloadFile(url,filename)
+        await API.handleDownloadFile(url,filename)
         setDownloaded(true)
     }; 
+
+    useEffect(()=>{
+        const saveLog = async () =>{
+            const timestampKeys = Object.keys(exportData)
+            .filter(k => k.startsWith('startTime'))
+            .sort((a, b) => exportData[a] - exportData[b]);
+            await API.handleLogSave(timestampKeys, exportData, formData.file.name, formData.school, formData.grade, formData.exercise_level)
+        }
+        
+      if (downloaded) saveLog()
+    },[exportData, downloaded])
 
   return (
     <div className="flex flex-col w-full h-[120%] items-center">

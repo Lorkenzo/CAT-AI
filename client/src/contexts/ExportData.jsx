@@ -6,6 +6,13 @@ const initialExportData = {
       url : null,
       urlHeading: null,
       urlAnswer: null,
+      startTimeImport: null,
+      startTimeGoal: null,
+      startTimeGeneration: null,
+      startTimeEdit: null,
+      startTimeExport: null,
+      startTimeDownload: null,
+      numberRegenerations: 0
     }
 
 const getInitialData = () => {

@@ -5,6 +5,7 @@ import path from 'path';
 import fs from 'fs/promises';
 import PdfParse from 'pdf-parse';
 import Tesseract from 'tesseract.js';
+import { createLog } from '../utils.mjs';
 
 /* ROUTE */
 const PORT = 3001
@@ -96,6 +97,19 @@ const extractTextFromImage = async (filePath) => {
   const { data: { text } } = await Tesseract.recognize(filePath, 'eng');
   return text;
 };
+
+fileRoutes.post('/log', async (req, res) => {
+
+  const {timestampKeys, exportData, filename, school, grade, exercise_level} = req.body
+  try {
+    const logContent = createLog(timestampKeys, exportData, filename, school, grade, exercise_level);
+    await fs.writeFile('logs/log.txt', logContent, 'utf8');
+
+  } catch (err) {
+    console.error('Errore durante salvataggio log:', err);
+    res.status(500).json({ error: 'Errore durante salvataggio log' });
+  }
+});
 
 fileRoutes.post('/extract-text', async (req, res) => {
   const filePath = req.body.path;

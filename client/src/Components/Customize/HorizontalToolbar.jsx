@@ -23,77 +23,80 @@ function HorizontalToolBar({zoomIn,zoomOut,scale,fullScreen,setFullScreen, setSe
     const {exportData, setExportData} = useExportData()
 
     const generatePdfFromDocument = async (element, headingHTML, title) => {
-    // Clona solo l'elemento da esportare (già passato come param: document o answer)
-    const clone = element.cloneNode(true);
-    clone.style.border = "none";
-    // Crea un contenitore neutro (nessuna trasformazione o scaling)
-    const wrapper = document.createElement('div');
-    wrapper.style.position = 'absolute';
-    wrapper.style.top = '0';
-    wrapper.style.left = '0';
-    wrapper.style.width = `${element.offsetWidth}px`;
-    wrapper.style.height = `${element.offsetHeight}px`;
-    wrapper.style.background = 'white';
-    wrapper.style.zIndex = '-1';
-    wrapper.style.pointerEvents = 'none'; // evita interazioni
-    wrapper.style.opacity = '0'; // invisibile ma visibile al DOM
-    wrapper.appendChild(clone);
+        // Clona solo l'elemento da esportare (già passato come param: document o answer)
+        const clone = element.cloneNode(true);
+        clone.style.border = "none";
+       
+        clone.querySelectorAll('#confidenceflag').forEach(el => el.remove());
 
-    // Aggiungi heading se presente
-    if (headingHTML !== "") {
-        const heading = document.createElement('div');
-        heading.innerHTML = headingHTML;
-        clone.insertBefore(heading, clone.firstChild);
-    }
+        // Crea un contenitore neutro (nessuna trasformazione o scaling)
+        const wrapper = document.createElement('div');
+        wrapper.style.position = 'absolute';
+        wrapper.style.top = '0';
+        wrapper.style.left = '0';
+        wrapper.style.width = `${element.offsetWidth}px`;
+        wrapper.style.height = `${element.offsetHeight}px`;
+        wrapper.style.background = 'white';
+        wrapper.style.zIndex = '-1';
+        wrapper.style.pointerEvents = 'none'; // evita interazioni
+        wrapper.style.opacity = '0'; // invisibile ma visibile al DOM
+        wrapper.appendChild(clone);
 
-    // Inserisci nel DOM temporaneamente
-    document.body.appendChild(wrapper);
+        // Aggiungi heading se presente
+        if (headingHTML !== "") {
+            const heading = document.createElement('div');
+            heading.innerHTML = headingHTML;
+            clone.insertBefore(heading, clone.firstChild);
+        }
 
-    const canvas = await html2canvas(clone, {
-        scale: 2,
-        useCORS: true,
-        windowWidth: element.scrollWidth, // forza larghezza piena
-    });
+        // Inserisci nel DOM temporaneamente
+        document.body.appendChild(wrapper);
 
-    const imgData = canvas.toDataURL('image/png');
+        const canvas = await html2canvas(clone, {
+            scale: 2,
+            useCORS: true,
+            windowWidth: element.scrollWidth, // forza larghezza piena
+        });
 
-    const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-    });
+        const imgData = canvas.toDataURL('image/png');
 
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
+        const pdf = new jsPDF({
+            orientation: 'portrait',
+            unit: 'mm',
+            format: 'a4'
+        });
 
-    const pxPerMm = 96 / 25.4;
-    const imgWidthMm = canvas.width / pxPerMm;
-    const imgHeightMm = canvas.height / pxPerMm;
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
 
-    const ratio = Math.min(pageWidth / imgWidthMm, pageHeight / imgHeightMm);
-    const imgScaledWidth = imgWidthMm * ratio;
-    const imgScaledHeight = imgHeightMm * ratio;
+        const pxPerMm = 96 / 25.4;
+        const imgWidthMm = canvas.width / pxPerMm;
+        const imgHeightMm = canvas.height / pxPerMm;
 
-    const marginX = (pageWidth - imgScaledWidth) / 2;
-    const marginY = (pageHeight - imgScaledHeight) / 2;
+        const ratio = Math.min(pageWidth / imgWidthMm, pageHeight / imgHeightMm);
+        const imgScaledWidth = imgWidthMm * ratio;
+        const imgScaledHeight = imgHeightMm * ratio;
 
-    pdf.addImage(imgData, 'PNG', marginX, marginY, imgScaledWidth, imgScaledHeight);
+        const marginX = (pageWidth - imgScaledWidth) / 2;
+        const marginY = (pageHeight - imgScaledHeight) / 2;
 
-    // Pulizia
-    document.body.removeChild(wrapper);
+        pdf.addImage(imgData, 'PNG', marginX, marginY, imgScaledWidth, imgScaledHeight);
 
-    const blob = pdf.output('blob');
-    const formData = new FormData();
-    formData.append('file', blob, `document_${title}.pdf`);
+        // Pulizia
+        document.body.removeChild(wrapper);
 
-    try {
-        const response = await API.handleUploadFile(formData);
-        console.log('PDF salvato su:', response.url);
-        return response.url;
-    } catch (error) {
-        console.error('Errore durante upload PDF:', error);
-    }
-};
+        const blob = pdf.output('blob');
+        const formData = new FormData();
+        formData.append('file', blob, `document_${title}.pdf`);
+
+        try {
+            const response = await API.handleUploadFile(formData);
+            console.log('PDF salvato su:', response.url);
+            return response.url;
+        } catch (error) {
+            console.error('Errore durante upload PDF:', error);
+        }
+    };
 
 
     const headingHTML = `
@@ -107,9 +110,12 @@ function HorizontalToolBar({zoomIn,zoomOut,scale,fullScreen,setFullScreen, setSe
     `;
 
     const handleExport = async () =>{
-        setSelectedId(null);
-        setTextSelectedId(null);
-        setImageSelectedId(null);
+
+        await setSelectedId(null);
+        await setTextSelectedId(null);
+        await setImageSelectedId(null);
+
+        setExportData((prev)=>({...prev, startTimeExport: Date.now()}))
 
         const exercise = document.getElementById('document');
         const answer = document.getElementById('answer');

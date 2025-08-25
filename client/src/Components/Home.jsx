@@ -6,8 +6,11 @@ import ArrowRightIcon from '@mui/icons-material/ArrowRight';
 import exportImg from "../assets/illustrazione-export.png"
 import uploadImg from "../assets/illustrazione-upload.png"
 import customizeImg from "../assets/illustrazione-customize.png"
+import { useExportData } from '../contexts/ExportData';
 
 function Home(){
+    const {setExportData} = useExportData()
+
     const navigate = useNavigate()
     return (
         <div className='flex flex-col-reverse gap-1 w-full h-full justify-around lg:flex-row max-lg:justify-end max-lg:gap-3'>
@@ -17,7 +20,7 @@ function Home(){
             <Typography variant='body1' className='max-lg:text-center'>CAT-AI makes it easy for teachers to design exercises <br/> and quizzes tailored to their students and learning goals.
             <br/>  Whether you’re planning lessons or assessments, <br/> CAT-AI turns your ideas into ready-to-use activities in no time.</Typography>
             <Steps></Steps>
-            <Button variant='contained' size='large' onClick={() => navigate("/generate")} sx={{
+            <Button variant='contained' size='large' onClick={() =>{ navigate("/generate"); setExportData((prev)=>({...prev, startTimeImport: Date.now()})) }} sx={{
                 color: 'white',
                 textShadow: '2px 2px 0 rgba(0,0,0,0.5)',
                 backgroundImage: 'linear-gradient(135deg, #0097a7, #1565c0)',

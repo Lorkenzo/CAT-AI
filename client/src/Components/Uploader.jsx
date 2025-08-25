@@ -12,6 +12,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile'
 import API from '../API/API.mjs';
+import { useExportData } from '../contexts/ExportData';
 import { useFormData } from "../contexts/FormContext"
 
 const formatFileSize = (bytes) => {
@@ -29,6 +30,7 @@ function FileUploader({setUploading}) {
   const fileInputRef = useRef(null);
 
   const { formData, setFormData, resetFormData } = useFormData();
+  const { setExportData } = useExportData()
 
   const handleFileUpload = async (selectedFile) => {
     if (!selectedFile) return;
@@ -68,6 +70,9 @@ function FileUploader({setUploading}) {
           school: res.school_level,
           grade: res.grade
       }));
+
+      setExportData((prev)=>({...prev, startTimeGoal: Date.now()}))
+
     } catch (err) {
         setUploadError(true)
         console.log(err);

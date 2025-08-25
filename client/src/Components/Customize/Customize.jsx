@@ -30,6 +30,10 @@ function Customize({fullScreen, setFullScreen}) {
     const [snapX, setSnapX] = useState(null);
     const [snapY, setSnapY] = useState(null);
 
+    const [regenOpen, setRegenOpen] = useState(null); 
+    const [anchorEl, setAnchorEl] = useState(null); 
+    const [regeneratedEl, setRegeneratedEl] = useState({}) 
+
     const ZOOM_STEP = 0.1;
     const MIN_ZOOM = 0.3;
     const MAX_ZOOM = 1.5;
@@ -179,7 +183,7 @@ function Customize({fullScreen, setFullScreen}) {
                                     <Typography variant="caption">The exercise is changed or the solution is unreliable? Regenerate Now</Typography>
                                     </Button>
                                 </div>:null}
-                                <div ref={page === 1? exerciseRef: answerRef} id={page === 1? "document": "answer"} className={`relative w-full h-full bg-white border-1 ${exercisePage === page && !loading?"border-gray-800":"border-gray-300"}  ${loading || exporting? "pointer-events-none":""} drop-shadow-md pb-24 mb-8`}
+                                <div ref={page === 1? exerciseRef: answerRef} id={page === 1? "document": "answer"} className={`relative w-full h-full bg-white border-1 ${exercisePage === page && !loading?"border-gray-800":"border-gray-300"}  ${loading || exporting? "pointer-events-none":""} drop-shadow-md pb-24 mb-8 mt-4`}
                                 onMouseDown={()=>setExercisePage(page)}
                                 style={{
                                     cursor: exercisePage === page? "default": "pointer",
@@ -194,7 +198,7 @@ function Customize({fullScreen, setFullScreen}) {
                                         )}
                                     {/**Content */}
                                     {textBoxes.map((el) => (  
-                                        el.page===page ? <TextElement key={el.id} el={el} selectedId={selectedId} setSelectedId={setSelectedId} textSelectedId={textSelectedId} setTextSelectedId={setTextSelectedId} snapX={snapX} setSnapX={setSnapX} snapY={snapY} setSnapY={setSnapY}></TextElement>
+                                        el.page===page ? <TextElement key={el.id} el={el} selectedId={selectedId} setSelectedId={setSelectedId} textSelectedId={textSelectedId} setTextSelectedId={setTextSelectedId} snapX={snapX} setSnapX={setSnapX} snapY={snapY} setSnapY={setSnapY}  setRegenOpen={setRegenOpen} setAnchorEl={setAnchorEl} regeneratedEl={regeneratedEl} setRegeneratedEl={setRegeneratedEl}></TextElement>
                                         : null
                                         
                                     ))}
@@ -210,7 +214,7 @@ function Customize({fullScreen, setFullScreen}) {
                         
                     </div>
                     
-                    <VerticalToolbar exercisePage={exercisePage} selectedId={selectedId} setSelectedId={setSelectedId} textSelectedId={textSelectedId} setTextSelectedId={setTextSelectedId} imageSelectedId={imageSelectedId} setImageSelectedId={setImageSelectedId} setLoading={setLoading}></VerticalToolbar>
+                    <VerticalToolbar exercisePage={exercisePage} selectedId={selectedId} setSelectedId={setSelectedId} textSelectedId={textSelectedId} setTextSelectedId={setTextSelectedId} imageSelectedId={imageSelectedId} setImageSelectedId={setImageSelectedId} setLoading={setLoading} regenOpen={regenOpen} setRegenOpen={setRegenOpen} anchorEl={anchorEl} setAnchorEl={setAnchorEl} setRegeneratedEl={setRegeneratedEl}></VerticalToolbar>
                     
                 </div>
             </div>

@@ -23,7 +23,7 @@ function NavBar({setIsSettingOpened}){
               textDecoration: 'none',
               flexGrow: 1 
             }}>
-                CAT-AI
+                CAT-TUTOR
             </Typography>
             <IconButton color="inherit" size="large" onClick={()=>{setIsSettingOpened(true)}}><SettingsIcon></SettingsIcon></IconButton>
             

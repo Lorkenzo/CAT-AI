@@ -116,7 +116,7 @@ function TextElement({el, selectedId, setSelectedId, textSelectedId, setTextSele
     const cmodel = (el.modelconfidence || 1) / 7;
     const cnumeric = checker(el) ? 0.9 : 0.3;
     const confidence = 0.5 * cnumeric + 0.5 * cmodel;
-    setLowConfidence((confidence<0.6 || Math.random()<0.2) && !regeneratedEl[el.id])
+    setLowConfidence((confidence<0.6 || Math.random()<0) && !regeneratedEl[el.id])
   },[])
 
   return (
@@ -150,11 +150,11 @@ function TextElement({el, selectedId, setSelectedId, textSelectedId, setTextSele
             <Alert severity="warning" className="flex absolute bottom-full items-center gap-1 left-0 w-max opacity-0 scale-0 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 shadow-lg">
               <div className='flex flex-col gap-1'>
               <div className="text-xs text-center">
-                {el.rationale} <br/> <span className='font-bold'> Low confidence? </span>
+                {el.rationale} <br/> <span className='font-bold'>If you are not satisfied you can fix this part!</span>
               </div>
               <div className='flex flex-row justify-center'>
-              <Button onClick={()=>{setLowConfidence(false);setRegeneratedEl(prev=>({...prev,[el.id]:true}))}} variant='text' color='inherit' size='small'>ignore</Button>
-              <Button onClick={()=>{setSelectedId(el.id);setRegenOpen("element");setAnchorEl(ref.current)}} variant='text' color='warning' size='small'>regen</Button>
+              <Button onClick={()=>{setLowConfidence(false);setRegeneratedEl(prev=>({...prev,[el.id]:true}))}} variant='text' color='inherit' size='small'>Checked</Button>
+              <Button onClick={()=>{setSelectedId(el.id);setRegenOpen("element");setAnchorEl(ref.current)}} variant='text' color='warning' size='small'>Fix</Button>
               </div>
               </div>
             </Alert>
@@ -169,7 +169,7 @@ function TextElement({el, selectedId, setSelectedId, textSelectedId, setTextSele
             <Alert severity='success' className="flex absolute bottom-full items-center gap-1 left-0 w-max opacity-0 scale-0 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 shadow-lg">
               <div className='flex flex-col gap-1'>
               <div className="text-xs text-center">
-                {el.rationale}
+                This {el.page===1?"exercise": "solution"} part has been checked
               </div>
               </div>
             </Alert>
@@ -189,12 +189,14 @@ function TextElement({el, selectedId, setSelectedId, textSelectedId, setTextSele
             }
             }
             onMouseUp={() => {
-              if (ref.current) {
+              if (ref.current ) {
                 const { offsetWidth, offsetHeight } = ref.current;
+                if (el.w - offsetWidth>1 || el-h - offsetHeight>1){
                 updateTextBox(el.id, {
                   w: offsetWidth,
                   h: offsetHeight,
                 });
+              }
               }
             }}
             placeholder="Text..."

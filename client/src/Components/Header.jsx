@@ -11,7 +11,7 @@ import Divider from '@mui/material/Divider';
 function Header({stepnumber}){
 
     let steps = [
-    'Generate',
+    'Set Up',
     'Customize',
     'Export',
     ];
@@ -45,7 +45,7 @@ function Header({stepnumber}){
                         )
                     }
                     <Typography key="3" sx={{ color: 'text.primary' }} variant='subtitle2'>
-                        {stepsmap[stepnumber]} 
+                        {stepnumber === 0? "Set Up":stepsmap[stepnumber]} 
                     </Typography>
                 </Breadcrumbs>
             </div>

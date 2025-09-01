@@ -123,15 +123,17 @@ const handleTextAnalysis = async (text) => {
   }
 };
 
-const handleExerciseGeneration = async (formdata) => {
+const handleExerciseGeneration = async (formdata, manual) => {
   try {
+    console.log(manual)
     const response = await fetch(`${SERVER_URL}/api/generate/exercise`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ 
-        data: formdata
+        data: formdata,
+        manual: manual
       }),
     });
 
@@ -237,6 +239,34 @@ const handleSolutionRegeneration = async (textBoxes) => {
   }
 };
 
+const handleConfidenceFlags = async (textBoxes) => {
+  try {
+    const response = await fetch(`${SERVER_URL}/api/generate/confidence-flag`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        textBoxes
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error('Errore:', data.errore);
+      return { errore: data.errore };
+    }
+
+    console.log('Risultato:', data);
+    return data;
+
+  } catch (error) {
+    console.error('Errore di rete:', error);
+    return { errore: 'Errore di rete o server non disponibile' };
+  }
+};
+
 const handleElementRegeneration = async (textBoxes, selectedId, text) => {
   try {
     const response = await fetch(`${SERVER_URL}/api/generate/element-again`, {
@@ -278,7 +308,8 @@ const API = {
   handleSolutionRegeneration,
   handleElementRegeneration,
   handleImageGeneration,
-  handleLogSave
+  handleLogSave,
+  handleConfidenceFlags
 }
 
 export default API

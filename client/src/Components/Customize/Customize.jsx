@@ -126,6 +126,11 @@ function Customize({fullScreen, setFullScreen}) {
     return (
         <div className={`flex flex-col w-full ${fullScreen?"h-full":"h-[140%]"} items-center max-md:h-[100%]`}>
         {!fullScreen && <Header stepnumber={1}></Header>}
+            {exporting && (
+            <div className="fixed inset-0 flex items-center justify-center z-[9999]">
+                <Loading text={"Exporting Exercise"} />
+            </div>
+            )}
             <div className={`flex flex-col w-full ${fullScreen?"h-full":"h-[85%]"} items-center mb-3 ${exporting? "pointer-events-none":""}`}>
                 <div className={`sticky top-0 z-10 flex ${fullScreen?"w-full":"w-[90%]"} justify-start py-2 max-md:w-full`}>
                 <HorizontalToolBar 
@@ -145,7 +150,6 @@ function Customize({fullScreen, setFullScreen}) {
                     ref={wrapperRef}
                     className={`relative ${fullScreen? "w-full": "w-[85%]"} h-full overflow-auto bg-gray-100 pt-3`}
                     >
-                        {(loading || exporting) && <Loading></Loading>}
                         <div
                             className="absolute origin-top-left"
                             style={{
@@ -160,7 +164,7 @@ function Customize({fullScreen, setFullScreen}) {
                                 return(
                                 <Fragment key={page}>
                                 {page === 2 && loading? null: page === 2?
-                                <div className="flex fixed -translate-y-8 h-24 w-fit max-w-60 px-2 duration-300 rounded-t-md hover:-translate-y-24"> 
+                                <div className="flex fixed -translate-y-8 h-24 w-fit max-w-60 duration-300 rounded-t-md hover:-translate-y-24"> 
                                     <Button onClick={handleSolutionCorrection} variant="contained" color="info" sx={{display: "flex", flexDirection: "column", justifyContent: "start", textTransform: "none", 
                                     color: 'white',
                                     backgroundImage: 'linear-gradient(135deg, #ff69b4, #8a2be2)',
@@ -180,7 +184,7 @@ function Customize({fullScreen, setFullScreen}) {
                                         <SyncProblemIcon></SyncProblemIcon>
                                         <Typography variant="button">Re-Compute Solution</Typography>
                                     </div>
-                                    <Typography variant="caption">The exercise is changed or the solution is unreliable? Regenerate Now</Typography>
+                                    <Typography variant="caption">The exercise is changed or the solution is unreliable?<br/> Regenerate Now</Typography>
                                     </Button>
                                 </div>:null}
                                 <div ref={page === 1? exerciseRef: answerRef} id={page === 1? "document": "answer"} className={`relative w-full h-full bg-white border-1 ${exercisePage === page && !loading?"border-gray-800":"border-gray-300"}  ${loading || exporting? "pointer-events-none":""} drop-shadow-md pb-24 mb-8 mt-4`}
@@ -188,7 +192,14 @@ function Customize({fullScreen, setFullScreen}) {
                                 style={{
                                     cursor: exercisePage === page? "default": "pointer",
                                 }}>
-                                    {loading && <div className="absolute inset-0 z-[1000] bg-gray-800/50"></div>}
+                                    {loading && (
+                                    <div className="absolute inset-0 z-[1000] flex items-center justify-center bg-gray-800/50 overflow-hidden">
+                                        {/* Barra riflesso */}
+                                        <div className="absolute inset-0">
+                                        <div className="absolute bottom-0 left-0  w-[200%] h-[300%] bg-gradient-to-r from-transparent via-white/30 to-transparent animate-sheen" />
+                                        </div>
+                                    </div>
+                                    )}
                                     {/**Snap bar X Y */}
                                     {exercisePage===page && snapX !== null && (
                                         <div style={{ position: 'absolute', left: snapX.center? PAGE_WIDTH/2 : snapX.x, top: 0, bottom: 0,width: 0, borderLeft: '2px dashed red', zIndex: 9999, pointerEvents: 'none'}}/>

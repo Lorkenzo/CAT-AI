@@ -5,7 +5,6 @@ function contentChecker() {
 
     const content = (item.content || "").trim();
 
-    console.log(content)
     if (!content) return false;
 
     if (seenContents.has(content.toLowerCase())) return false;

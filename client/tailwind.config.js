@@ -38,6 +38,20 @@ export default {
       backgroundImage: {
         
       },
+      keyframes: {
+        sheen: {
+          '0%': { transform: 'translate(-200%, -200%) rotate(45deg)' },
+          '100%': { transform: 'translate(200%, 200%) rotate(45deg)' },
+        },
+         walk: {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(600%)" },
+        },
+      },
+      animation: {
+        sheen: 'sheen 3.5s infinite',
+        walk: "walk 6.5s linear infinite",
+      },
     },
   },
   plugins: [

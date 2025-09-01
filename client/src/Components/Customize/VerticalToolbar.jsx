@@ -56,6 +56,7 @@ function VerticalToolbar({exercisePage, selectedId, setSelectedId, textSelectedI
         
             if (regenOpen === "full") {
                 const res = await API.handleExerciseRegeneration(textBoxes,prompt)
+                console.log(res)
                 setTextBoxes(res)
             }
             if (regenOpen ==="element") {

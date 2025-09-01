@@ -94,7 +94,9 @@ export const DocumentProvider = ({ children }) => {
     );
 
     const last = history[history.length - 1];
-    const isSame = last && JSON.stringify(last.textBoxes) === JSON.stringify(updated);
+    let isSame
+    if (last) isSame = JSON.stringify(last.textBoxes) === JSON.stringify(updated);
+    else isSame = JSON.stringify(textBoxes) === JSON.stringify(updated);
 
     if (!isSame) {
       console.log(updated)

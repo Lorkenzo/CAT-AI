@@ -15,10 +15,10 @@ function Home(){
     return (
         <div className='flex flex-col-reverse gap-1 w-full h-full justify-around lg:flex-row max-lg:justify-end max-lg:gap-3'>
             <div className='flex flex-col gap-4 items-start justify-center max-lg:mt-3 max-lg:items-center'>
-            <Typography variant='h4' className='font-bold max-lg:hidden'>Create classroom activities <br/>
-                with your teaching assistant</Typography>
-            <Typography variant='body1' className='max-lg:text-center'>CAT-TUTOR makes it easy for teachers to design exercises <br/> and quizzes tailored to their students and learning goals.
-            <br/>  Whether you’re planning lessons or assessments, <br/> CAT-TUTOR turns your ideas into ready-to-use activities.</Typography>
+            <Typography variant='h4' className='font-bold max-lg:hidden'>Create smarter classroom activities <br/>
+                with your AI-teaching assistant</Typography>
+            <Typography variant='body1' className='max-lg:text-center'>CAT-AI makes it easy for teachers to design exercises <br/> and quizzes tailored to their students and learning goals.
+            <br/>  Whether you’re planning lessons or assessments, <br/> CAT-AI turns your ideas into ready-to-use activities.</Typography>
             <Steps></Steps>
             <Button variant='contained' size='large' onClick={() =>{ navigate("/generate"); setExportData((prev)=>({...prev, startTimeImport: Date.now()})) }} sx={{
                 color: 'white',

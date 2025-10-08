@@ -3,7 +3,7 @@ import SettingsSuggestIcon from '@mui/icons-material/SettingsSuggest';
 import SettingsIcon from '@mui/icons-material/Settings';
 import PaletteIcon from '@mui/icons-material/Palette';
 import TuneIcon from '@mui/icons-material/Tune';
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { GeneralSettings } from "./GeneralSettings";
 import { StyleSettings } from "./StyleSettings";
 import { AdvancedSettings } from "./AdvancedSettings";
@@ -25,6 +25,10 @@ function Settings({isSettingOpened, setIsSettingOpened}) {
         setIsSettingOpened(false)
         setFormData(newSettings)
     }
+
+    useEffect(()=>{
+        setNewSettings(formData)
+    }, [formData])
 
     return(
         <Dialog

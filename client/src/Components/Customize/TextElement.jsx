@@ -1,10 +1,10 @@
 import Draggable from 'react-draggable';
-import { TextareaAutosize } from "@mui/material"
+import { FormHelperText, TextareaAutosize } from "@mui/material"
 import { useState, useEffect, useRef } from "react";
 import { useDocument } from "../../contexts/CustomizeContext";
 import { useFormData } from "../../contexts/FormContext";
 import { contentChecker } from './utils.mjs';
-import PriorityHighIcon from '@mui/icons-material/PriorityHigh';
+import WarningIcon from '@mui/icons-material/Warning';
 import DoneIcon from '@mui/icons-material/Done';
 import { Button, Alert } from '@mui/material';
 
@@ -116,7 +116,7 @@ function TextElement({el, selectedId, setSelectedId, textSelectedId, setTextSele
     const cmodel = (el.modelconfidence || 1) / 7;
     const cnumeric = checker(el) ? 0.9 : 0.3;
     const confidence = 0.5 * cnumeric + 0.5 * cmodel;
-    setLowConfidence((confidence<0.6 || Math.random()<0) && !regeneratedEl[el.id])
+    if (el.id !== selectedId) setLowConfidence((confidence<0.6 || Math.random()<0) && !regeneratedEl[el.id])
   },[])
 
   return (
@@ -146,7 +146,7 @@ function TextElement({el, selectedId, setSelectedId, textSelectedId, setTextSele
             className="absolute h-4 w-4 z-[999] rounded-md bg-transparent -translate-x-4 translate-y-3 transition-all duration-300 overflow-visible group flex items-center justify-center"
             style={{ transformOrigin: 'bottom left' }}
           >
-            <PriorityHighIcon color='warning' fontSize='small'/>
+            <WarningIcon color='warning' fontSize='small'/>
             <Alert severity="warning" className="flex absolute bottom-full items-center gap-1 left-0 w-max opacity-0 scale-0 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 shadow-lg">
               <div className='flex flex-col gap-1'>
               <div className="text-xs text-center">
@@ -191,7 +191,7 @@ function TextElement({el, selectedId, setSelectedId, textSelectedId, setTextSele
             onMouseUp={() => {
               if (ref.current ) {
                 const { offsetWidth, offsetHeight } = ref.current;
-                if (el.w - offsetWidth>1 || el-h - offsetHeight>1){
+                if (el.w - offsetWidth>1 || el.h - offsetHeight>1){
                 updateTextBox(el.id, {
                   w: offsetWidth,
                   h: offsetHeight,
@@ -222,6 +222,7 @@ function TextElement({el, selectedId, setSelectedId, textSelectedId, setTextSele
             }}
           />
         ) : (
+        <div>
           <div
           onClick={handleSingleClick}
           onDoubleClick={handleDoubleClick}
@@ -247,6 +248,8 @@ function TextElement({el, selectedId, setSelectedId, textSelectedId, setTextSele
           >
             {el.content || 'Text...'}
           </div>
+          {selectedId === el.id && <FormHelperText>Double click to edit text or resize the box</FormHelperText>}
+        </div>
         )}
       </div>
     </Draggable>

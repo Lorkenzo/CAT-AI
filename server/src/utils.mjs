@@ -92,7 +92,7 @@ function generatePrompt(formData, manual) {
     TextBox Structure guide:
     1. The first TextBox object must always be a title of the exercise.
     2. The second TextBox must always be a general test instruction of what the student has to do. ${reminder ? "- The third textbox must be a useful reminder or note to help students concerning the pre-prequisites." : ""}
-    3. The following TextBoxes will all contain a different exercise ${!followStructure? `each one its own clear instruction, that specifies what to do in the exercise. There must be ${n_questions} exercises.`: "each one following the original text structure, remember to keep clear instructions for each exercise."}
+    3. The following TextBoxes will all contain a different exercise ${!followStructure? `each one its own clear instruction, that specifies what to do in the exercise.`: "each one following the original text structure, remember to keep clear instructions for each exercise."} There must be ${n_questions} exercises.
     4. Each exercise ${followStructure? "follows the exercise structure of the original text":"has 3 points to solve"}. ${example ? "Include a worked-out example already solved as really first point (0) for each exercise created immediatly after the exercise instruction." : ""}. Use lists and newlines to make the exercises well readable and formatted.
     5. The solution will be displayed in another page, so the position for solution text boxes have to be resetted. Insert a solution title as first textbox of page 2.
     6. The followig TextBoxes has to contain the solutions relative to each exercise, one textbox for each exercise. Inside each textbox use newlines to format properly each part of the solution showing clearly all the procedures. 
@@ -283,7 +283,7 @@ return `
       - Put modelconfidence=1 if you find contradictions, mistakes, or incoherence. 
       - Put modelconfidence=7 if everything is correct.
       - The rationale have to generally evidence the wrong points of the exercise or solution without explaining why (e.g. "The points a) and b) of this solution seem to be incorrect", "The instruction of this exercise seem to be incorrect")
-  - If a textbox in the exercise has modelconfidence=1, assign modelconfidence=1 to the corresponding solution textbox as well, or viceversa. Putting as rationale "Check the corresponding solution" or "Check the corresponding exercise"
+  - If a textbox in the exercise has modelconfidence=1, assign modelconfidence=1 to the corresponding solution textbox as well, or viceversa. Putting as rationale "Check this exercise and the corresponding solution" or "Check this solution and the corresponding exercise"
   - Do not modify or correct the content of wrong textboxes.
 
   Here is the list of current TextBoxes:

@@ -234,7 +234,7 @@ function VerticalToolbar({exercisePage, selectedId, setSelectedId, textSelectedI
             value={regenOpen}
             onChange={handleRegenToggle}
             >
-                <Tooltip title="Regenerate All" placement="right">
+                <Tooltip title="Ask CAT-TUTOR" placement="right">
                     <ToggleButton data-ignore-click-outside value="full" sx={{
                         color: 'white',
                         backgroundImage: 'linear-gradient(135deg, #ff69b4, #8a2be2)',
@@ -545,7 +545,7 @@ function RegenPopover({anchorEl,open, onClose, mode, handleRegeneration}){
             <Stack direction="column" spacing={2}>
                 <div className="flex flex-row justify-start items-center">
                     {regenMode==="Exercise"?<AutoModeIcon fontSize="small" className="mr-2 align-middle"/>:<GeneratingTokensIcon fontSize="small" className="mr-2 align-middle"></GeneratingTokensIcon>}
-                    <Typography variant="body1">Regenerate {regenMode}</Typography>
+                    <Typography variant="body1">CAT-TUTOR: Change {regenMode}</Typography>
                 </div>
                 <TextField onChange={(e)=>setRegenPrompt(e.target.value)} value={regenPrompt} multiline minRows={4} maxRows={4} variant="outlined" color="primary" placeholder="I would like..." helperText="Specify what you would like to change" 
                 ></TextField>
